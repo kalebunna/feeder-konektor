@@ -7,53 +7,113 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## About Laravel
+## Analisis Fitur dan Panduan Instalasi Project Feeder Stainas
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Project ini adalah aplikasi penghubung (bridge) antara sistem lokal dengan **Neo Feeder PDDikti**. Berbasis Laravel 12, aplikasi ini memudahkan pengelolaan data mahasiswa, kurikulum, dan perkuliahan untuk disinkronisasi ke Feeder.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Fitur Utama
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Secara keseluruhan, fitur-fitur yang ada dalam project ini meliputi:
 
-## Learning Laravel
+### 1. Integrasi Neo Feeder
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- **Feeder Service**: Wrapper API untuk berkomunikasi dengan Neo Feeder (GetToken, Proxy, Post, Delete).
+- **Connection Test**: Fitur untuk melakukan uji coba koneksi ke Feeder.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2. Manajemen Data Master (Referensi)
 
-## Laravel Sponsors
+- Sinkronisasi data referensi langsung dari Feeder ke database lokal, meliputi:
+    - Agama, Wilayah (Kecamatan/Kabupaten/Provinsi), Negara.
+    - Jenjang Pendidikan, Pekerjaan, Penghasilan.
+    - Jenis Pendaftaran, Jalur Masuk, Pembiayaan.
+    - Tahun Ajaran dan Semester.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 3. Manajemen Mahasiswa
 
-### Premium Partners
+- **Biodata Mahasiswa**: Melihat dan sinkronisasi biodata mahasiswa.
+- **Riwayat Pendidikan**: Sinkronisasi data registrasi mahasiswa ke Feeder.
+- **Import Mahasiswa**:
+    - Impor data mahasiswa baru dari file Excel/CSV.
+    - Fitur **Smart-Mapping**: Otomatis memetakan data Excel (seperti nama wilayah, agama, pendidikan ortu) ke ID referensi Feeder.
+    - Sinkronisasi batch untuk mengirim data yang telah diimpor ke Feeder.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 4. Kurikulum dan Mata Kuliah
 
-## Contributing
+- **Mata Kuliah Lokal**: Manajemen data mata kuliah internal (CRUD, Import, Sync ke Feeder).
+- **Kurikulum**:
+    - Melihat daftar kurikulum per program studi.
+    - Manajemen mata kuliah dalam kurikulum (Tambah/Hapus).
+    - **Copy Kurikulum**: Memudahkan penyalinan daftar mata kuliah dari satu kurikulum ke kurikulum lain.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 5. Akademik
 
-## Code of Conduct
+- **Program Studi**: Daftar dan detail prodi.
+- **Profil Perguruan Tinggi**: Informasi profil kampus dari Feeder.
+    - **Tahun Ajaran & Semester**: Pengaturan periode aktif yang disinkronkan dengan Feeder.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 🛠️ Langkah-Langkah Instalasi
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Ikuti langkah berikut untuk memasang project di lingkungan lokal:
 
-## License
+### Prasyarat
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- PHP >= 8.2
+- Composer
+- Node.js & NPM
+- SQLite (default) atau MySQL
+- Akses ke Endpoint Neo Feeder PDDikti
+
+### 1. Persiapan Awal
+
+```bash
+# Clone repository
+git clone [url-repository]
+cd feeder-stainas
+```
+
+### 2. Jalankan Setup Otomatis
+
+Project ini sudah menyediakan script setup untuk memudahkan instalasi:
+
+```bash
+composer run setup
+```
+
+_Script ini akan menjalankan: composer install, copy .env, generate key, migrate database, npm install, dan build assets._
+
+### 3. Konfigurasi Environment (.env)
+
+Buka file `.env` dan sesuaikan pengaturan database serta **koneksi Feeder**. Gunakan variabel yang sudah disediakan di `.env.example` sebagai acuan:
+
+```env
+# Koneksi Database (Default: SQLite)
+DB_CONNECTION=sqlite
+
+# Koneksi ke Neo Feeder PDDikti (Pastikan variabel ini ada di .env)
+FEEDER_URL=...
+FEEDER_USER=...
+FEEDER_PASS=...
+```
+
+### 4. Menjalankan Aplikasi
+
+Anda dapat menjalankan aplikasi menggunakan server development Laravel:
+
+```bash
+php artisan serve
+```
+
+Atau menggunakan script dev yang menjalankan vite secara bersamaan:
+
+```bash
+composer run dev
+```
+
+---
+
+## 📝 Catatan Penting
+
+- **Database**: Jika menggunakan SQLite, pastikan file `database/database.sqlite` sudah ada (otomatis dibuat jika menjalankan `composer run setup`).
+- **Sync Referensi**: Setelah instalasi berhasil, sangat disarankan untuk masuk ke menu **Reference** dan melakukan sinkronisasi semua tabel referensi agar fitur pemetaan (mapping) data mahasiswa berjalan lancar.

@@ -103,4 +103,20 @@ class FeederService
 
         return $response->json();
     }
+
+    /**
+     * Delete data from Feeder
+     */
+    public function delete($act, $key)
+    {
+        $token = $this->getToken();
+
+        $response = Http::post($this->url, [
+            'act' => $act,
+            'token' => $token,
+            'key' => $key
+        ]);
+
+        return $response->json();
+    }
 }

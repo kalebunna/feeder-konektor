@@ -40,6 +40,10 @@
                         </p>
                     </div>
                     <div>
+                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#copyModal">
+                            <i class="fas fa-copy"></i> Salin dari Kurikulum Lain
+                        </button>
                         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
                             data-bs-target="#bulkAddModal">
                             <i class="fas fa-plus"></i> Tambah Matakuliah
@@ -133,7 +137,7 @@
                         <h5 class="modal-title" id="bulkAddModalLabel">Tambah Matakuliah ke Kurikulum</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                         <div class="row mb-3">
                             <div class="col-md-3">
                                 <label class="form-label">Semester</label>
@@ -170,6 +174,37 @@
             </div>
         </div>
     </div>
+    <!-- Copy Modal -->
+    <div class="modal fade" id="copyModal" tabindex="-1" aria-labelledby="copyModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="copyForm">
+                    @csrf
+                    <input type="hidden" name="id_kurikulum_target" value="{{ $kurikulum['id_kurikulum'] }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="copyModalLabel">Salin dari Kurikulum Lain</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Kurikulum Sumber</label>
+                            <select name="id_kurikulum_source" id="sourceKurikulumSelect" class="form-control" required>
+                                <option value="">Cari Kurikulum...</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Semua mata kuliah dari kurikulum sumber akan
+                            disalin ke kurikulum ini dengan semester yang sama.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-info">Mulai Salin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('js')
@@ -179,6 +214,78 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Select2 for Source Kurikulum
+            $('#sourceKurikulumSelect').select2({
+                dropdownParent: $('#copyModal'),
+                ajax: {
+                    url: "{{ route('kurikulum.ajax.list') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            search: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: $.map(data, function(item) {
+                                return {
+                                    text: item.nama_kurikulum + ' (' + item.nama_program_studi +
+                                        ')',
+                                    id: item.id_kurikulum
+                                }
+                            })
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+            $('#copyForm').submit(function(e) {
+                e.preventDefault();
+                let formData = $(this).serialize();
+
+                Swal.fire({
+                    title: 'Peringatan',
+                    text: 'Apakah Anda yakin ingin menyalin mata kuliah dari kurikulum lain? Ini mungkin memerlukan waktu beberapa saat.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Salin!',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#3085d6',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Sedang Menyalin...',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading()
+                            }
+                        });
+
+                        $.ajax({
+                            url: "{{ route('kurikulum.matkul.copy') }}",
+                            type: "POST",
+                            data: formData,
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire('Berhasil!', response.message, 'success')
+                                        .then(() => {
+                                            location.reload();
+                                        });
+                                } else {
+                                    Swal.fire('Gagal!', response.message, 'error');
+                                }
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', xhr.responseJSON.message ||
+                                    'Terjadi kesalahan sistem', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
             let rowIndex = 0;
 
             // Add initial row

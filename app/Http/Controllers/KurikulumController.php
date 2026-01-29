@@ -110,7 +110,7 @@ class KurikulumController extends Controller
         ];
 
         try {
-            $response = $this->feeder->post('DeleteMatkulKurikulum', $record);
+            $response = $this->feeder->delete('DeleteMatkulKurikulum', $record);
 
             if (isset($response['error_code']) && $response['error_code'] != 0) {
                 return response()->json(['success' => false, 'message' => $response['error_desc']], 400);
@@ -184,5 +184,81 @@ class KurikulumController extends Controller
             'errors' => $errors,
             'message' => $successCount > 0 ? "$successCount mata kuliah berhasil ditambahkan ke kurikulum." : "Gagal menambahkan mata kuliah."
         ]);
+    }
+
+    public function getKurikulumList(Request $request)
+    {
+        $search = $request->search;
+        $filter = "";
+        if (!empty($search)) {
+            $filter = "nama_kurikulum LIKE '%$search%' OR nama_program_studi LIKE '%$search%'";
+        }
+
+        try {
+            $response = $this->feeder->proxy('GetListKurikulum', $filter, 0, 50);
+            return response()->json($response['data'] ?? []);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function copyMatkulKurikulum(Request $request)
+    {
+        $request->validate([
+            'id_kurikulum_target' => 'required',
+            'id_kurikulum_source' => 'required'
+        ]);
+
+        $id_target = $request->id_kurikulum_target;
+        $id_source = $request->id_kurikulum_source;
+
+        try {
+            // 1. Get courses from source
+            $sourceResponse = $this->feeder->proxy('GetMatkulKurikulum', "id_kurikulum = '$id_source'");
+
+            if (isset($sourceResponse['error_code']) && $sourceResponse['error_code'] != 0) {
+                return response()->json(['success' => false, 'message' => 'Gagal mengambil data sumber: ' . $sourceResponse['error_desc']], 400);
+            }
+
+            $courses = $sourceResponse['data'] ?? [];
+
+            if (empty($courses)) {
+                return response()->json(['success' => false, 'message' => 'Kurikulum sumber tidak memiliki mata kuliah.'], 400);
+            }
+
+            $successCount = 0;
+            $errors = [];
+
+            // 2. Loop and Insert into target
+            foreach ($courses as $mk) {
+                $record = [
+                    'id_kurikulum'         => $id_target,
+                    'id_matkul'            => $mk['id_matkul'],
+                    'semester'             => (int)($mk['semester'] ?? 1),
+                    'sks_mata_kuliah'      => (float)($mk['sks_mata_kuliah'] ?? 0),
+                    'sks_tatap_muka'       => (float)($mk['sks_tatap_muka'] ?? 0),
+                    'sks_praktek'          => (float)($mk['sks_praktek'] ?? 0),
+                    'sks_praktek_lapangan' => (float)($mk['sks_praktek_lapangan'] ?? 0),
+                    'sks_simulasi'         => (float)($mk['sks_simulasi'] ?? 0),
+                    'apakah_wajib'         => (int)($mk['apakah_wajib'] ?? 1),
+                ];
+
+                $response = $this->feeder->post('InsertMatkulKurikulum', $record);
+                if (isset($response['error_code']) && $response['error_code'] == 0) {
+                    $successCount++;
+                } else {
+                    $errors[] = "Matkul {$mk['nama_mata_kuliah']}: " . ($response['error_desc'] ?? 'Unknown error');
+                }
+            }
+
+            return response()->json([
+                'success' => $successCount > 0,
+                'successCount' => $successCount,
+                'errors' => $errors,
+                'message' => "Berhasil menyalin $successCount mata kuliah ke kurikulum target."
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

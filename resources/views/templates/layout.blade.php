@@ -85,18 +85,22 @@
                             aria-expanded="false">
                             <img class="rounded-circle header-profile-user"
                                 src="{{ asset('templates/assets/images/users/avatar-1.jpg') }}" alt="Header Avatar">
-                            <span class="d-none d-xl-inline-block ms-1 fw-medium">Shawn L.</span>
+                            <span class="d-none d-xl-inline-block ms-1 fw-medium">{{ Auth::user()->name }}</span>
                             <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end">
                             <!-- item-->
-                            <a class="dropdown-item" href="apps-contacts-profile.html"><i
+                            <a class="dropdown-item" href="#"><i
                                     class="mdi mdi mdi-face-man font-size-16 align-middle me-1"></i> Profile</a>
-                            <a class="dropdown-item" href="auth-lock-screen.html"><i
-                                    class="mdi mdi-lock font-size-16 align-middle me-1"></i> Lock Screen</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="auth-logout.html"><i
-                                    class="mdi mdi-logout font-size-16 align-middle me-1"></i> Logout</a>
+                            <a class="dropdown-item text-danger" href="{{ route('logout') }}"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="mdi mdi-logout font-size-16 align-middle me-1 text-danger"></i> Logout
+                            </a>
+
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                @csrf
+                            </form>
                         </div>
                     </div>
 

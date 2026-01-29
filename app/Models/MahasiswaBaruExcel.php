@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class MahasiswaBaruExcel extends Model
+{
+    protected $fillable = [
+        'no',
+        'nama',
+        'nim',
+        'tetala',
+        'nik',
+        'program_studi',
+        'tahun_masuk',
+        'agama',
+        'jenis_kelamin',
+        'nomor_hp',
+        'rt_rw',
+        'dusun',
+        'desa_kelurahan',
+        'kecamatan',
+        'kabupaten',
+        'nama_ayah',
+        'tetala_ayah',
+        'tempat_lahir_ayah',
+        'tanggal_lahir_ayah',
+        'nik_ayah',
+        'pendidikan_ayah',
+        'rt_rw_ayah',
+        'dusun_ayah',
+        'desa_kelurahan_ayah',
+        'kecamatan_ayah',
+        'kabupaten_ayah',
+        'pekerjaan_ayah',
+        'id_penghasilan_ayah',
+        'nama_ibu',
+        'tetala_ibu',
+        'tempat_lahir_ibu',
+        'tanggal_lahir_ibu',
+        'nik_ibu',
+        'pendidikan_ibu',
+        'rt_rw_ibu',
+        'dusun_ibu',
+        'desa_kelurahan_ibu',
+        'kecamatan_ibu',
+        'kabupaten_ibu',
+        'nomor_hp_ibu',
+        'id_penghasilan_ibu',
+        'nama_wali',
+        'alamat_wali',
+        'nomor_hp_wali',
+        'asal_sekolah',
+        'alamat_sekolah',
+        'tahun_lulus',
+        'nisn',
+        'status',
+    ];
+}

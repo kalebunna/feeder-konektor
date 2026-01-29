@@ -117,3 +117,71 @@ composer run dev
 
 - **Database**: Jika menggunakan SQLite, pastikan file `database/database.sqlite` sudah ada (otomatis dibuat jika menjalankan `composer run setup`).
 - **Sync Referensi**: Setelah instalasi berhasil, sangat disarankan untuk masuk ke menu **Reference** dan melakukan sinkronisasi semua tabel referensi agar fitur pemetaan (mapping) data mahasiswa berjalan lancar.
+
+---
+
+## 🔁 Alur Kontribusi (WAJIB DIIKUTI)
+
+### 1️⃣ Fork Repository
+
+Klik tombol **Fork** di GitHub untuk menyalin repository ini ke akun GitHub Anda.
+
+---
+
+### 2️⃣ Clone Repository Hasil Fork
+
+```bash
+git clone https://github.com/username/feeder-konektor.git
+cd feeder-konektor
+```
+
+### 3️⃣ Buat Branch Baru
+
+Jangan gunakan branch `main`.
+
+```bash
+git checkout -b feature/nama-fitur
+# atau
+git checkout -b fix/nama-bug
+```
+
+### 4️⃣ Lakukan Perubahan
+
+- Kerjakan fitur atau perbaikan
+- Pastikan kode rapi dan mudah dipahami
+- Lakukan testing jika memungkinkan
+
+### 5️⃣ Commit Perubahan
+
+Gunakan pesan commit yang jelas.
+
+```bash
+git add .
+git commit -m "feat: deskripsi singkat perubahan"
+```
+
+### 6️⃣ Push ke Repository Fork
+
+```bash
+git push origin feature/nama-fitur
+```
+
+### 7️⃣ Buat Pull Request (PR)
+
+- Buka repository **kalebunna/feeder-konektor**
+- Klik **New Pull Request**
+- Base branch: `main`
+- Compare branch: `username:feature/nama-fitur`
+- Jelaskan perubahan yang dilakukan
+
+---
+
+> [!IMPORTANT]
+> **🚫 Pull Request tanpa branch atau push langsung ke main akan ditolak.**
+
+### 🧭 Standar Penamaan Branch
+
+- `feature/nama-fitur`
+- `fix/nama-bug`
+- `refactor/nama-refactor`
+- `docs/perbaikan-dokumentasi`

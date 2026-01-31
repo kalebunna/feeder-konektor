@@ -19,17 +19,27 @@ class KelasKuliahController extends Controller
 
     public function index(Request $request)
     {
+        $activeSemester = Semester::where('a_periode_aktif', '1')->first();
+        $selectedSemesterId = $request->input('id_semester', $activeSemester->id_semester ?? null);
+
         if ($request->ajax()) {
             try {
                 $start = (int)$request->input('start', 0);
                 $limit = (int)$request->input('length', 10);
                 $search = $request->input('search.value');
 
-                $filter = "";
+                $filters = [];
+                if ($selectedSemesterId) {
+                    $filters[] = "id_semester = '$selectedSemesterId'";
+                }
+
                 if (!empty($search)) {
                     // Simple search filter for nama_mata_kuliah or nama_dosen
-                    $filter = "nama_mata_kuliah LIKE '%$search%' OR nama_dosen LIKE '%$search%' OR nama_kelas_kuliah LIKE '%$search%'";
+                    $searchFilter = "(nama_mata_kuliah LIKE '%$search%' OR nama_dosen LIKE '%$search%' OR nama_kelas_kuliah LIKE '%$search%')";
+                    $filters[] = $searchFilter;
                 }
+
+                $filter = implode(' AND ', $filters);
 
                 // Get Total Count
                 $countResponse = $this->feeder->proxy('GetCountKelasKuliah', $filter);
@@ -59,7 +69,9 @@ class KelasKuliahController extends Controller
             }
         }
 
-        return view('admin.kelas-kuliah.index');
+        $semesters = Semester::orderBy('id_semester', 'desc')->get();
+
+        return view('admin.kelas-kuliah.index', compact('semesters', 'selectedSemesterId'));
     }
 
     public function create()

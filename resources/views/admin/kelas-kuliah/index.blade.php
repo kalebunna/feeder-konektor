@@ -16,10 +16,26 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title">Data Kelas Kuliah dari Feeder</h4>
-                    <p class="text-muted mb-0">Menampilkan data langsung dari Neo Feeder tanpa melalui database lokal.</p>
+                    <div>
+                        <h4 class="card-title">Data Kelas Kuliah dari Feeder</h4>
+                        <p class="text-muted mb-0">Menampilkan data langsung dari Neo Feeder tanpa melalui database lokal.
+                        </p>
+                    </div>
                 </div>
                 <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Pilih Semester</label>
+                            <select class="form-control" id="filter-semester">
+                                @foreach ($semesters as $semester)
+                                    <option value="{{ $semester->id_semester }}"
+                                        {{ $selectedSemesterId == $semester->id_semester ? 'selected' : '' }}>
+                                        {{ $semester->nama_semester }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-bordered dt-responsive nowrap w-100" id="kelas-kuliah-table">
                             <thead>
@@ -58,6 +74,9 @@
                 serverSide: true,
                 ajax: {
                     url: "{{ route('kelas-kuliah.index') }}",
+                    data: function(d) {
+                        d.id_semester = $('#filter-semester').val();
+                    }
                 },
                 columns: [{
                         data: 'DT_RowIndex',
@@ -94,6 +113,10 @@
                         name: 'jumlah_mahasiswa'
                     },
                 ]
+            });
+
+            $('#filter-semester').change(function() {
+                table.draw();
             });
         });
     </script>

@@ -84,16 +84,30 @@ class KurikulumController extends Controller
 
             $matkul = $response['data'] ?? [];
 
-            // Grouping by semester
+            // Grouping by semester and calculating grand totals
             $groupedMatkul = [];
+            $totals = [
+                'sks_mata_kuliah' => 0,
+                'sks_tatap_muka' => 0,
+                'sks_praktek' => 0,
+                'sks_praktek_lapangan' => 0,
+                'sks_simulasi' => 0,
+            ];
+
             foreach ($matkul as $m) {
                 $sem = $m['semester'] ?? 'Lainnya';
                 $groupedMatkul[$sem][] = $m;
+
+                $totals['sks_mata_kuliah'] += (float)($m['sks_mata_kuliah'] ?? 0);
+                $totals['sks_tatap_muka'] += (float)($m['sks_tatap_muka'] ?? 0);
+                $totals['sks_praktek'] += (float)($m['sks_praktek'] ?? 0);
+                $totals['sks_praktek_lapangan'] += (float)($m['sks_praktek_lapangan'] ?? 0);
+                $totals['sks_simulasi'] += (float)($m['sks_simulasi'] ?? 0);
             }
 
             ksort($groupedMatkul);
 
-            return view('admin.kurikulum.show', compact('kurikulum', 'groupedMatkul'));
+            return view('admin.kurikulum.show', compact('kurikulum', 'groupedMatkul', 'totals'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }

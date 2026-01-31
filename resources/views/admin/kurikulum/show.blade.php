@@ -55,22 +55,40 @@
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="border rounded p-3 text-center">
-                                <h5 class="mb-1 text-primary">{{ $kurikulum['jumlah_sks_lulus'] }}</h5>
-                                <span class="text-muted font-size-13">SKS Lulus</span>
+                        <div class="col-md-2">
+                            <div class="border rounded p-3 text-center bg-light">
+                                <h5 class="mb-1 text-primary">{{ number_format($totals['sks_mata_kuliah'], 2) }}</h5>
+                                <span class="text-muted font-size-12">Total SKS</span>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="border rounded p-3 text-center">
-                                <h5 class="mb-1 text-success">{{ $kurikulum['jumlah_sks_wajib'] }}</h5>
-                                <span class="text-muted font-size-13">SKS Wajib</span>
+                                <h5 class="mb-1 text-success">{{ number_format($totals['sks_tatap_muka'], 2) }}</h5>
+                                <span class="text-muted font-size-12">Tatap Muka</span>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="border rounded p-3 text-center">
-                                <h5 class="mb-1 text-info">{{ $kurikulum['jumlah_sks_pilihan'] }}</h5>
-                                <span class="text-muted font-size-13">SKS Pilihan</span>
+                                <h5 class="mb-1 text-info">{{ number_format($totals['sks_praktek'], 2) }}</h5>
+                                <span class="text-muted font-size-12">Praktek</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="border rounded p-3 text-center">
+                                <h5 class="mb-1 text-warning">{{ number_format($totals['sks_praktek_lapangan'], 2) }}</h5>
+                                <span class="text-muted font-size-12">Prak. Lapangan</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="border rounded p-3 text-center">
+                                <h5 class="mb-1 text-danger">{{ number_format($totals['sks_simulasi'], 2) }}</h5>
+                                <span class="text-muted font-size-12">Simulasi</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="border rounded p-3 text-center bg-soft-primary">
+                                <h5 class="mb-1">{{ $kurikulum['jumlah_sks_lulus'] }}</h5>
+                                <span class="text-muted font-size-12">Target Lulus</span>
                             </div>
                         </div>
                     </div>
@@ -83,39 +101,74 @@
                             <table class="table table-bordered table-hover">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="50">No</th>
+                                        <th width="50" class="text-center">No</th>
                                         <th width="120">Kode MK</th>
                                         <th>Nama Mata Kuliah</th>
-                                        <th width="80">SKS</th>
-                                        <th width="100">Wajib?</th>
-                                        <th width="100">Aksi</th>
+                                        <th width="70" class="text-center">SKS</th>
+                                        <th width="60" class="text-center">TM</th>
+                                        <th width="60" class="text-center">Prak</th>
+                                        <th width="60" class="text-center">PL</th>
+                                        <th width="60" class="text-center">Sim</th>
+                                        <th width="80" class="text-center">Wajib?</th>
+                                        <th width="100" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        $subTotalSks = 0;
+                                        $subTotalTM = 0;
+                                        $subTotalPrak = 0;
+                                        $subTotalPL = 0;
+                                        $subTotalSim = 0;
+                                    @endphp
                                     @foreach ($items as $item)
+                                        @php
+                                            $subTotalSks += (float) $item['sks_mata_kuliah'];
+                                            $subTotalTM += (float) $item['sks_tatap_muka'];
+                                            $subTotalPrak += (float) $item['sks_praktek'];
+                                            $subTotalPL += (float) $item['sks_praktek_lapangan'];
+                                            $subTotalSim += (float) $item['sks_simulasi'];
+                                        @endphp
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td>{{ $item['kode_mata_kuliah'] }}</td>
                                             <td>{{ $item['nama_mata_kuliah'] }}</td>
-                                            <td>{{ $item['sks_mata_kuliah'] }}</td>
-                                            <td>
+                                            <td class="text-center font-weight-bold">
+                                                {{ number_format($item['sks_mata_kuliah'], 2) }}</td>
+                                            <td class="text-center">{{ number_format($item['sks_tatap_muka'], 2) }}</td>
+                                            <td class="text-center">{{ number_format($item['sks_praktek'], 2) }}</td>
+                                            <td class="text-center">{{ number_format($item['sks_praktek_lapangan'], 2) }}
+                                            </td>
+                                            <td class="text-center">{{ number_format($item['sks_simulasi'], 2) }}</td>
+                                            <td class="text-center">
                                                 @if ($item['apakah_wajib'] == '1')
                                                     <span class="badge bg-primary">Wajib</span>
                                                 @else
                                                     <span class="badge bg-secondary">Pilihan</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td class="text-center">
                                                 <button class="btn btn-sm btn-danger btn-delete-matkul"
                                                     data-id-kurikulum="{{ $kurikulum['id_kurikulum'] }}"
                                                     data-id-matkul="{{ $item['id_matkul'] }}"
                                                     data-nama="{{ $item['nama_mata_kuliah'] }}">
-                                                    <i class="fas fa-trash"></i> Hapus
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
+                                <tfoot class="table-light font-weight-bold">
+                                    <tr>
+                                        <td colspan="3" class="text-end">Jumlah Semester {{ $semester }}:</td>
+                                        <td class="text-center">{{ number_format($subTotalSks, 2) }}</td>
+                                        <td class="text-center">{{ number_format($subTotalTM, 2) }}</td>
+                                        <td class="text-center">{{ number_format($subTotalPrak, 2) }}</td>
+                                        <td class="text-center">{{ number_format($subTotalPL, 2) }}</td>
+                                        <td class="text-center">{{ number_format($subTotalSim, 2) }}</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     @empty
@@ -141,7 +194,8 @@
                         <div class="row mb-3">
                             <div class="col-md-3">
                                 <label class="form-label">Semester</label>
-                                <input type="number" name="semester" class="form-control" placeholder="Contoh: 1" required>
+                                <input type="number" name="semester" class="form-control" placeholder="Contoh: 1"
+                                    required>
                             </div>
                         </div>
 

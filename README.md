@@ -70,7 +70,7 @@ Ikuti langkah berikut untuk memasang project di lingkungan lokal:
 ```bash
 # Clone repository
 git clone [url-repository]
-cd feeder-stainas
+cd feeder-konektor
 ```
 
 ### 2. Jalankan Setup Otomatis

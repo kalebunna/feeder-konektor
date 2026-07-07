@@ -11,6 +11,30 @@
         rel="stylesheet" type="text/css" />
     <!-- SweetAlert2 -->
     <link href="{{ asset('templates/assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-selection--multiple {
+            border: 1px solid #ced4da !important;
+            min-height: 38px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #5156be !important;
+            border: none !important;
+            color: white !important;
+            padding: 2px 8px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: white !important;
+            margin-right: 5px !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -19,9 +43,18 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title">Daftar Biodata Mahasiswa</h4>
-                    <button id="btn-sync" class="btn btn-info btn-sm">
-                        <i class="fas fa-sync-alt"></i> Sinkronkan Data
-                    </button>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#filterModal">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <button id="btn-export" class="btn btn-success btn-sm">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button id="btn-sync" class="btn btn-info btn-sm">
+                            <i class="fas fa-sync-alt"></i> Sinkronkan Data
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -46,6 +79,45 @@
             </div>
         </div>
     </div>
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel"><i class="fas fa-filter me-2"></i>Filter Data Biodata Mahasiswa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filterForm">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Angkatan</label>
+                                <select class="form-control select2-multiple" name="id_periodes[]" multiple="multiple">
+                                    @foreach ($periodes as $p)
+                                        <option value="{{ $p->id_tahun_ajaran }}">{{ $p->nama_tahun_ajaran }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Bisa pilih lebih dari satu angkatan</small>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Program Studi</label>
+                                <select class="form-control select2-multiple" name="prodi_names[]" multiple="multiple">
+                                    @foreach ($prodis as $pr)
+                                        <option value="{{ $pr->nama_program_studi }}">{{ $pr->nama_program_studi }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Bisa pilih lebih dari satu prodi</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-reset-filter">Reset Filter</button>
+                    <button type="button" class="btn btn-primary" id="btn-apply-filter">Terapkan Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('js')
@@ -58,13 +130,28 @@
     </script>
     <!-- SweetAlert2 -->
     <script src="{{ asset('templates/assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
+            // Initialize Select2
+            $('.select2-multiple').select2({
+                placeholder: " Pilih opsi...",
+                allowClear: true,
+                dropdownParent: $('#filterModal')
+            });
+
             var table = $('#mahasiswa-table').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('biodata-mahasiswa.index') }}",
+                ajax: {
+                    url: "{{ route('biodata-mahasiswa.index') }}",
+                    data: function(d) {
+                        d.prodi_names = $('select[name="prodi_names[]"]').val();
+                        d.id_periodes = $('select[name="id_periodes[]"]').val();
+                    }
+                },
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -115,6 +202,30 @@
                         searchable: false
                     },
                 ]
+            });
+
+            $('#btn-apply-filter').on('click', function() {
+                table.ajax.reload();
+                $('#filterModal').modal('hide');
+            });
+
+            $('#btn-reset-filter').on('click', function() {
+                $('#filterForm')[0].reset();
+                $('.select2-multiple').val(null).trigger('change');
+                table.ajax.reload();
+                $('#filterModal').modal('hide');
+            });
+
+            $('#btn-export').on('click', function() {
+                let prodiNames = $('select[name="prodi_names[]"]').val() || [];
+                let idPeriodes = $('select[name="id_periodes[]"]').val() || [];
+                
+                let queryParams = $.param({
+                    prodi_names: prodiNames,
+                    id_periodes: idPeriodes
+                });
+                
+                window.location.href = "{{ route('biodata-mahasiswa.export') }}?" + queryParams;
             });
 
             $('#btn-sync').on('click', function() {

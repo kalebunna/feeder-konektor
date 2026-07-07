@@ -192,11 +192,21 @@ class KurikulumController extends Controller
             }
         }
 
+        $message = "";
+        if ($successCount > 0 && empty($errors)) {
+            $message = "$successCount mata kuliah berhasil ditambahkan ke kurikulum.";
+        } elseif ($successCount > 0 && !empty($errors)) {
+            $message = "$successCount mata kuliah berhasil ditambahkan, namun " . count($errors) . " gagal (kemungkinan sudah ada).";
+        } else {
+            $message = "Gagal menambahkan mata kuliah ke kurikulum.";
+        }
+
         return response()->json([
-            'success' => $successCount > 0,
+            'success' => $successCount > 0 && empty($errors),
+            'hasSuccess' => $successCount > 0,
             'successCount' => $successCount,
             'errors' => $errors,
-            'message' => $successCount > 0 ? "$successCount mata kuliah berhasil ditambahkan ke kurikulum." : "Gagal menambahkan mata kuliah."
+            'message' => $message
         ]);
     }
 

@@ -95,9 +95,15 @@
                                                     <i class="fas fa-sync me-1"></i> Sinkronkan
                                                 </a>
                                             @else
-                                                <button class="btn btn-sm btn-secondary" disabled>
-                                                    <i class="fas fa-check me-1"></i> Selesai
-                                                </button>
+                                                <div class="d-flex gap-1">
+                                                    <button class="btn btn-sm btn-secondary" disabled>
+                                                        <i class="fas fa-check me-1"></i> Selesai
+                                                    </button>
+                                                    <a href="{{ route('import-mahasiswa.sync-form', $item->id) }}"
+                                                        class="btn btn-sm btn-info" title="Lihat Detail">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </div>
                                             @endif
                                         </td>
                                     </tr>

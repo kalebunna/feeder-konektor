@@ -94,8 +94,12 @@
                     </div>
 
                     @forelse ($groupedMatkul as $semester => $items)
-                        <div class="semester-group">
+                        <div class="semester-group d-flex justify-content-between align-items-center">
                             <h5 class="semester-title">Semester {{ $semester }}</h5>
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-add-matkul-sem"
+                                data-semester="{{ $semester }}">
+                                <i class="fas fa-plus"></i> Tambah ke Semester ini
+                            </button>
                         </div>
                         <div class="table-responsive mb-4">
                             <table class="table table-bordered table-hover">
@@ -345,8 +349,22 @@
             // Add initial row
             addRow();
 
+            // Reset modal state when hidden
+            $('#bulkAddModal').on('hidden.bs.modal', function() {
+                $('#bulkAddForm')[0].reset();
+                $('#bulkMatkulTable tbody').empty();
+                rowIndex = 0;
+                addRow();
+            });
+
             $('#btnAddRow').click(function() {
                 addRow();
+            });
+
+            $(document).on('click', '.btn-add-matkul-sem', function() {
+                let semester = $(this).data('semester');
+                $('#bulkAddForm input[name="semester"]').val(semester);
+                $('#bulkAddModal').modal('show');
             });
 
             function addRow() {
@@ -470,10 +488,23 @@
                             Swal.fire('Berhasil!', response.message, 'success').then(() => {
                                 location.reload();
                             });
+                        } else if (response.hasSuccess) {
+                            // Partial success
+                            Swal.fire({
+                                title: 'Berhasil dengan Peringatan',
+                                html: response.message + (response.errors ?
+                                    '<br><div class="text-start mt-2"><small class="text-danger">' +
+                                    response.errors.join('<br>') +
+                                    '</small></div>' : ''),
+                                icon: 'warning'
+                            }).then(() => {
+                                location.reload();
+                            });
                         } else {
                             Swal.fire('Terjadi Kesalahan', response.message + (response.errors ?
-                                '<br><small>' + response.errors.join('<br>') +
-                                '</small>' : ''), 'error');
+                                '<br><div class="text-start mt-2"><small class="text-danger">' +
+                                response.errors.join('<br>') +
+                                '</small></div>' : ''), 'error');
                         }
                     },
                     error: function(xhr) {

@@ -17,6 +17,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/reference/sync/{table}', [\App\Http\Controllers\ReferenceController::class, 'sync'])->name('reference.sync');
 
     Route::get('/admin/biodata-mahasiswa', [\App\Http\Controllers\BiodataMahasiswaController::class, 'index'])->name('biodata-mahasiswa.index');
+    Route::get('/admin/biodata-mahasiswa/export', [\App\Http\Controllers\BiodataMahasiswaController::class, 'export'])->name('biodata-mahasiswa.export');
     Route::get('/admin/biodata-mahasiswa/{id}', [\App\Http\Controllers\BiodataMahasiswaController::class, 'show'])->name('biodata-mahasiswa.show');
     Route::post('/admin/biodata-mahasiswa/sync', [\App\Http\Controllers\BiodataMahasiswaController::class, 'sync'])->name('biodata-mahasiswa.sync');
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BiodataMahasiswa;
 use App\Models\Mahasiswa;
 use App\Models\TahunAjaran;
+use App\Models\Prodi;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\FeederService;
@@ -41,11 +42,7 @@ class BiodataMahasiswaController extends Controller
             if ($request->has('id_periodes') && !empty($request->id_periodes)) {
                 $idPeriodes = $request->id_periodes;
                 $data->whereHas('mahasiswa', function ($q) use ($idPeriodes) {
-                    $q->where(function ($sq) use ($idPeriodes) {
-                        foreach ($idPeriodes as $year) {
-                            $sq->orWhere('id_periode', 'like', $year . '%');
-                        }
-                    });
+                    $q->whereIn('nama_periode_masuk', $idPeriodes);
                 });
             }
 
@@ -63,9 +60,10 @@ class BiodataMahasiswaController extends Controller
         }
 
         $prodis = Mahasiswa::distinct()->whereNotNull('nama_program_studi')->orderBy('nama_program_studi')->get(['nama_program_studi']);
-        $periodes = TahunAjaran::orderBy('id_tahun_ajaran', 'desc')->get(['id_tahun_ajaran', 'nama_tahun_ajaran']);
+        $periodes = Mahasiswa::distinct()->whereNotNull('nama_periode_masuk')->orderBy('nama_periode_masuk', 'desc')->get(['nama_periode_masuk']);
+        $prodiList = Prodi::orderBy('nama_program_studi')->get();
 
-        return view('admin.biodata_mahasiswa.index', compact('prodis', 'periodes'));
+        return view('admin.biodata_mahasiswa.index', compact('prodis', 'periodes', 'prodiList'));
     }
 
     public function export(Request $request)
@@ -83,11 +81,7 @@ class BiodataMahasiswaController extends Controller
         $idPeriodes = $request->id_periodes;
         if (!empty($idPeriodes)) {
             $data->whereHas('mahasiswa', function ($q) use ($idPeriodes) {
-                $q->where(function ($sq) use ($idPeriodes) {
-                    foreach ($idPeriodes as $year) {
-                        $sq->orWhere('id_periode', 'like', $year . '%');
-                    }
-                });
+                $q->whereIn('nama_periode_masuk', $idPeriodes);
             });
         }
 
@@ -99,7 +93,7 @@ class BiodataMahasiswaController extends Controller
 
         // Title Block
         $sheet->setCellValue('A1', 'BIODATA MAHASISWA STAINAS');
-        
+
         // Metadata
         $prodiText = !empty($prodiNames) ? implode(', ', $prodiNames) : 'Semua';
         $angkatanText = '';
@@ -117,14 +111,54 @@ class BiodataMahasiswaController extends Controller
 
         // Table Header
         $headers = [
-            'No', 'NIM', 'Nama Mahasiswa', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Agama', 
-            'NIK', 'NISN', 'NPWP', 'Kewarganegaraan', 'Jalan', 'Dusun', 'RT', 'RW', 
-            'Kelurahan', 'Kode Pos', 'Kecamatan (Wilayah)', 'Jenis Tinggal', 'Alat Transportasi', 
-            'Telepon', 'Handphone', 'Email', 'Penerima KPS', 'Nomor KPS', 'Program Studi', 'Periode Masuk',
-            'NIK Ayah', 'Nama Ayah', 'Tanggal Lahir Ayah', 'Pendidikan Ayah', 'Pekerjaan Ayah', 'Penghasilan Ayah',
-            'NIK Ibu', 'Nama Ibu Kandung', 'Tanggal Lahir Ibu', 'Pendidikan Ibu', 'Pekerjaan Ibu', 'Penghasilan Ibu',
-            'Nama Wali', 'Tanggal Lahir Wali', 'Pendidikan Wali', 'Pekerjaan Wali', 'Penghasilan Wali',
-            'Kebutuhan Khusus Mahasiswa', 'Kebutuhan Khusus Ayah', 'Kebutuhan Khusus Ibu', 'Status Sync'
+            'No',
+            'NIM',
+            'Nama Mahasiswa',
+            'Jenis Kelamin',
+            'Tempat Lahir',
+            'Tanggal Lahir',
+            'Agama',
+            'NIK',
+            'NISN',
+            'NPWP',
+            'Kewarganegaraan',
+            'Jalan',
+            'Dusun',
+            'RT',
+            'RW',
+            'Kelurahan',
+            'Kode Pos',
+            'Kecamatan (Wilayah)',
+            'Jenis Tinggal',
+            'Alat Transportasi',
+            'Telepon',
+            'Handphone',
+            'Email',
+            'Penerima KPS',
+            'Nomor KPS',
+            'Program Studi',
+            'Periode Masuk',
+            'NIK Ayah',
+            'Nama Ayah',
+            'Tanggal Lahir Ayah',
+            'Pendidikan Ayah',
+            'Pekerjaan Ayah',
+            'Penghasilan Ayah',
+            'NIK Ibu',
+            'Nama Ibu Kandung',
+            'Tanggal Lahir Ibu',
+            'Pendidikan Ibu',
+            'Pekerjaan Ibu',
+            'Penghasilan Ibu',
+            'Nama Wali',
+            'Tanggal Lahir Wali',
+            'Pendidikan Wali',
+            'Pekerjaan Wali',
+            'Penghasilan Wali',
+            'Kebutuhan Khusus Mahasiswa',
+            'Kebutuhan Khusus Ayah',
+            'Kebutuhan Khusus Ibu',
+            'Status Sync'
         ];
 
         $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
@@ -150,7 +184,7 @@ class BiodataMahasiswaController extends Controller
             $nim = $item->mahasiswa ? $item->mahasiswa->nim : '-';
             $prodi = $item->mahasiswa ? $item->mahasiswa->nama_program_studi : '-';
             $periode = $item->mahasiswa ? $item->mahasiswa->nama_periode_masuk : '-';
-            
+
             $values = [
                 $no++,
                 $nim,
@@ -235,7 +269,7 @@ class BiodataMahasiswaController extends Controller
 
         // Generate download stream
         $filename = 'biodata_mahasiswa_' . date('Ymd_His') . '.xlsx';
-        
+
         return response()->stream(
             function () use ($spreadsheet) {
                 $writer = new Xlsx($spreadsheet);
@@ -257,54 +291,86 @@ class BiodataMahasiswaController extends Controller
         return view('admin.biodata_mahasiswa.show', compact('mahasiswa'));
     }
 
-    public function sync()
+    public function sync(Request $request)
     {
         try {
-            $response = $this->feeder->proxy('GetBiodataMahasiswa');
-
-            if (isset($response['error_code']) && $response['error_code'] != 0) {
-                return response()->json(['success' => false, 'message' => $response['error_desc']]);
+            if ($request->clear === 'true' || $request->clear === true) {
+                \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+                BiodataMahasiswa::truncate();
+                \Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
             }
 
-            $data = $response['data'];
-            $count = 0;
+            $id_prodi = $request->id_prodi;
+            $prodisToSync = [];
 
-            foreach ($data as $item) {
-                // Fix date formats (NeoFeeder often returns DD-MM-YYYY)
-                $dateFields = ['tanggal_lahir', 'tanggal_lahir_ayah', 'tanggal_lahir_ibu', 'tanggal_lahir_wali'];
-                foreach ($dateFields as $field) {
-                    if (!empty($item[$field])) {
-                        try {
-                            $item[$field] = Carbon::createFromFormat('d-m-Y', $item[$field])->format('Y-m-d');
-                        } catch (\Exception $e) {
-                            // If it's already in YYYY-MM-DD or another format, try standard parsing
+            if ($id_prodi && $id_prodi !== 'all') {
+                $prodisToSync[] = $id_prodi;
+            } else {
+                $prodisToSync = Prodi::pluck('id_prodi')->toArray();
+            }
+
+            $totalFeeder = 0;
+            $totalSaved = 0;
+
+            foreach ($prodisToSync as $prodiId) {
+                $response = $this->feeder->proxy('GetDataLengkapMahasiswaProdi', "id_prodi='{$prodiId}'");
+
+                if (isset($response['error_code']) && $response['error_code'] != 0) {
+                    return response()->json(['success' => false, 'message' => $response['error_desc']]);
+                }
+
+                if (empty($response['data'])) {
+                    continue;
+                }
+
+                $data = $response['data'];
+                $totalFeeder += count($data);
+
+                foreach ($data as $item) {
+                    // Fix date formats (NeoFeeder often returns DD-MM-YYYY)
+                    $dateFields = ['tanggal_lahir', 'tanggal_lahir_ayah', 'tanggal_lahir_ibu', 'tanggal_lahir_wali'];
+                    foreach ($dateFields as $field) {
+                        if (!empty($item[$field])) {
                             try {
-                                $item[$field] = Carbon::parse($item[$field])->format('Y-m-d');
-                            } catch (\Exception $e2) {
-                                $item[$field] = null;
+                                $item[$field] = Carbon::createFromFormat('d-m-Y', $item[$field])->format('Y-m-d');
+                            } catch (\Exception $e) {
+                                // If it's already in YYYY-MM-DD or another format, try standard parsing
+                                try {
+                                    $item[$field] = Carbon::parse($item[$field])->format('Y-m-d');
+                                } catch (\Exception $e2) {
+                                    $item[$field] = null;
+                                }
                             }
                         }
                     }
-                }
 
-                // Sanitize identity fields (remove spaces)
-                $identityFields = ['nik', 'nik_ayah', 'nik_ibu', 'nisn', 'npwp'];
-                foreach ($identityFields as $field) {
-                    if (!empty($item[$field])) {
-                        $item[$field] = str_replace(' ', '', $item[$field]);
+                    // Sanitize identity fields (remove spaces)
+                    $identityFields = ['nik', 'nik_ayah', 'nik_ibu', 'nisn', 'npwp'];
+                    foreach ($identityFields as $field) {
+                        if (!empty($item[$field])) {
+                            $item[$field] = str_replace(' ', '', (string)$item[$field]);
+                        }
                     }
-                }
 
-                BiodataMahasiswa::updateOrCreate(
-                    ['id_mahasiswa' => $item['id_mahasiswa']],
-                    $item + ['status_sync' => 'sudah sync']
-                );
-                $count++;
+                    BiodataMahasiswa::updateOrCreate(
+                        ['id_mahasiswa' => $item['id_mahasiswa']],
+                        $item + ['status_sync' => 'sudah sync']
+                    );
+
+                    // Update id_prodi di tabel mahasiswas jika sebelumnya NULL / belum ada
+                    if (!empty($item['id_prodi'])) {
+                        Mahasiswa::where('id_mahasiswa', $item['id_mahasiswa'])
+                            ->whereNull('id_prodi')
+                            ->update(['id_prodi' => $item['id_prodi']]);
+                    }
+
+                    $totalSaved++;
+                }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => "Berhasil sinkronisasi $count data biodata mahasiswa.",
+                'message' => "Sinkronisasi selesai. Total data dari Feeder: $totalFeeder, Berhasil disimpan ke database: $totalSaved.",
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()]);

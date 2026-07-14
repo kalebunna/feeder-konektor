@@ -222,23 +222,38 @@
                 $('#filterModal').modal('hide');
             });
 
-            $('#btn-sync').on('click', function() {
+             $('#btn-sync').on('click', function() {
+                let prodiOptions = {
+                    'all': 'Semua Program Studi'
+                };
+                @foreach($prodiList as $p)
+                    prodiOptions["{{ $p->id_prodi }}"] = "{{ $p->nama_program_studi }} ({{ $p->nama_jenjang_pendidikan }})";
+                @endforeach
+
                 Swal.fire({
                     title: 'Sinkronisasi Data',
-                    text: 'Menyinkronkan daftar registrasi mahasiswa dengan NeoFeeder?',
-                    icon: 'question',
+                    text: 'Pilih Program Studi yang ingin disinkronkan dengan NeoFeeder:',
+                    input: 'select',
+                    inputOptions: prodiOptions,
+                    inputValue: 'all',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, Sinkronkan!',
                     cancelButtonText: 'Batal',
                     confirmButtonColor: '#5156be',
                     cancelButtonColor: '#fd625e',
                     showLoaderOnConfirm: true,
-                    preConfirm: () => {
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Anda harus memilih Program Studi!'
+                        }
+                    },
+                    preConfirm: (prodiId) => {
                         return $.ajax({
                             url: "{{ route('mahasiswa.sync') }}",
                             type: "POST",
                             data: {
-                                _token: "{{ csrf_token() }}"
+                                _token: "{{ csrf_token() }}",
+                                id_prodi: prodiId
                             }
                         }).then(response => {
                             if (!response.success) {

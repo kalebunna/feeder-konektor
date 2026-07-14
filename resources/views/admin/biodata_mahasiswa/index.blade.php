@@ -54,6 +54,9 @@
                         <button id="btn-sync" class="btn btn-info btn-sm">
                             <i class="fas fa-sync-alt"></i> Sinkronkan Data
                         </button>
+                        <button id="btn-clear-sync" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash-alt"></i> Clear & Sinkron Ulang
+                        </button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -91,13 +94,13 @@
                     <form id="filterForm">
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <label class="form-label fw-bold">Angkatan</label>
+                                <label class="form-label fw-bold">Periode Masuk / Angkatan</label>
                                 <select class="form-control select2-multiple" name="id_periodes[]" multiple="multiple">
                                     @foreach ($periodes as $p)
-                                        <option value="{{ $p->id_tahun_ajaran }}">{{ $p->nama_tahun_ajaran }}</option>
+                                        <option value="{{ $p->nama_periode_masuk }}">{{ $p->nama_periode_masuk }}</option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">Bisa pilih lebih dari satu angkatan</small>
+                                <small class="text-muted">Bisa pilih lebih dari satu periode</small>
                             </div>
                             <div class="col-md-12 mb-3">
                                 <label class="form-label fw-bold">Program Studi</label>
@@ -228,23 +231,38 @@
                 window.location.href = "{{ route('biodata-mahasiswa.export') }}?" + queryParams;
             });
 
-            $('#btn-sync').on('click', function() {
+             $('#btn-sync').on('click', function() {
+                let prodiOptions = {
+                    'all': 'Semua Program Studi'
+                };
+                @foreach($prodiList as $p)
+                    prodiOptions["{{ $p->id_prodi }}"] = "{{ $p->nama_program_studi }} ({{ $p->nama_jenjang_pendidikan }})";
+                @endforeach
+
                 Swal.fire({
                     title: 'Sinkronisasi Data',
-                    text: 'Apakah Anda yakin ingin menyinkronkan data biodata mahasiswa dengan NeoFeeder?',
-                    icon: 'question',
+                    text: 'Pilih Program Studi yang ingin disinkronkan dengan NeoFeeder:',
+                    input: 'select',
+                    inputOptions: prodiOptions,
+                    inputValue: 'all',
                     showCancelButton: true,
                     confirmButtonText: 'Ya, Sinkronkan!',
                     cancelButtonText: 'Batal',
                     confirmButtonColor: '#5156be',
                     cancelButtonColor: '#fd625e',
                     showLoaderOnConfirm: true,
-                    preConfirm: () => {
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Anda harus memilih Program Studi!'
+                        }
+                    },
+                    preConfirm: (prodiId) => {
                         return $.ajax({
                             url: "{{ route('biodata-mahasiswa.sync') }}",
                             type: "POST",
                             data: {
-                                _token: "{{ csrf_token() }}"
+                                _token: "{{ csrf_token() }}",
+                                id_prodi: prodiId
                             }
                         }).then(response => {
                             if (!response.success) {
@@ -262,6 +280,65 @@
                     if (result.isConfirmed) {
                         Swal.fire({
                             title: 'Berhasil!',
+                            text: result.value.message,
+                            icon: 'success'
+                        });
+                        table.ajax.reload();
+                    }
+                });
+            });
+
+            $('#btn-clear-sync').on('click', function() {
+                let prodiOptions = {
+                    'all': 'Semua Program Studi'
+                };
+                @foreach($prodiList as $p)
+                    prodiOptions["{{ $p->id_prodi }}"] = "{{ $p->nama_program_studi }} ({{ $p->nama_jenjang_pendidikan }})";
+                @endforeach
+
+                Swal.fire({
+                    title: 'Peringatan Hapus & Sinkron Ulang!',
+                    text: 'Tindakan ini akan MENGHAPUS TERLEBIH DAHULU semua data biodata mahasiswa di database lokal, lalu menarik data baru yang valid dari Feeder. Apakah Anda yakin?',
+                    icon: 'warning',
+                    input: 'select',
+                    inputOptions: prodiOptions,
+                    inputValue: 'all',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Bersihkan & Sinkron!',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#fd625e',
+                    cancelButtonColor: '#74788d',
+                    showLoaderOnConfirm: true,
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Anda harus memilih Program Studi!'
+                        }
+                    },
+                    preConfirm: (prodiId) => {
+                        return $.ajax({
+                            url: "{{ route('biodata-mahasiswa.sync') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                id_prodi: prodiId,
+                                clear: 'true'
+                            }
+                        }).then(response => {
+                            if (!response.success) {
+                                throw new Error(response.message ||
+                                    'Gagal menyinkronkan data');
+                            }
+                            return response;
+                        }).catch(error => {
+                            Swal.showValidationMessage(
+                                `Request failed: ${error.message}`);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Berhasil Bersihkan & Sinkron!',
                             text: result.value.message,
                             icon: 'success'
                         });

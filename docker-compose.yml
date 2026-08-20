@@ -1,0 +1,71 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: feeder-stainas-app:latest
+        container_name: feeder-stainas-app
+        restart: unless-stopped
+        working_dir: /var/www/html
+        env_file:
+            - .env
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - feeder_network
+        depends_on:
+            - db
+
+    web:
+        image: nginx:alpine
+        container_name: feeder-stainas-web
+        restart: unless-stopped
+        ports:
+            - "9012:80" # Akses aplikasi feeder di port 9012
+        volumes:
+            - ./:/var/www/html
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        networks:
+            - feeder_network
+        depends_on:
+            - app
+
+    queue-worker:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: feeder-stainas-app:latest
+        container_name: feeder-stainas-queue
+        restart: unless-stopped
+        command: php artisan queue:work --tries=3 --timeout=90
+        env_file:
+            - .env
+        volumes:
+            - ./:/var/www/html
+        networks:
+            - feeder_network
+        depends_on:
+            - db
+            - app
+
+    db:
+        image: postgres:16-alpine
+        container_name: feeder-stainas-db
+        restart: unless-stopped
+        ports:
+            - "127.0.0.1:5433:5432" # Port 5433 agar tidak bentrok dengan web-stainas (5432)
+        environment:
+            POSTGRES_USER: ${DB_USERNAME:-postgres}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+            POSTGRES_DB: ${DB_DATABASE:-feeder_stainas}
+        volumes:
+            - feeder_db_data:/var/lib/postgresql/data
+        networks:
+            - feeder_network
+
+networks:
+    feeder_network:
+        driver: bridge
+
+volumes:
+    feeder_db_data:

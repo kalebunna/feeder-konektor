@@ -22,6 +22,7 @@ use App\Models\Prodi;
 use App\Models\ProfilPT;
 use App\Models\Penghasilan;
 use App\Models\Pembiayaan;
+use App\Models\SkalaNilai;
 
 class ReferenceController extends Controller
 {
@@ -52,6 +53,7 @@ class ReferenceController extends Controller
             ['name' => 'Profil Perguruan Tinggi', 'table' => 'profil_pts', 'model' => ProfilPT::class, 'act' => 'GetProfilPT'],
             ['name' => 'Penghasilan', 'table' => 'penghasilans', 'model' => Penghasilan::class, 'act' => 'GetPenghasilan'],
             ['name' => 'Pembiayaan', 'table' => 'pembiayaans', 'model' => Pembiayaan::class, 'act' => 'GetPembiayaan'],
+            ['name' => 'Skala Nilai (Bobot Nilai)', 'table' => 'skala_nilais', 'model' => SkalaNilai::class, 'act' => 'GetListSkalaNilaiProdi'],
         ];
 
         return view('admin.reference.index', compact('references'));
@@ -77,6 +79,7 @@ class ReferenceController extends Controller
             'profil_pts' => ['model' => ProfilPT::class, 'act' => 'GetProfilPT', 'pk' => 'kode_perguruan_tinggi'],
             'penghasilans' => ['model' => Penghasilan::class, 'act' => 'GetPenghasilan', 'pk' => 'id_penghasilan'],
             'pembiayaans' => ['model' => Pembiayaan::class, 'act' => 'GetPembiayaan', 'pk' => 'id_pembiayaan'],
+            'skala_nilais' => ['model' => SkalaNilai::class, 'act' => 'GetListSkalaNilaiProdi', 'pk' => 'id_bobot_nilai'],
         ];
 
         if (!isset($maps[$table])) {

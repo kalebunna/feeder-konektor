@@ -13,6 +13,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/test-feeder', [\App\Http\Controllers\FeederTestController::class, 'showTestPage'])->name('feeder.test');
     Route::post('/test-feeder/submit', [\App\Http\Controllers\FeederTestController::class, 'submitRequest'])->name('feeder.test.submit');
 
+    Route::get('/admin/kamus-data', [\App\Http\Controllers\KamusDataController::class, 'index'])->name('kamus-data.index');
+    Route::post('/admin/kamus-data/fetch', [\App\Http\Controllers\KamusDataController::class, 'fetch'])->name('kamus-data.fetch');
+
+    Route::get('/admin/skala-nilai', [\App\Http\Controllers\SkalaNilaiController::class, 'index'])->name('skala-nilai.index');
+
+    Route::prefix('admin/input-nilai')->name('input-nilai.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\InputNilaiController::class, 'index'])->name('index');
+        Route::get('/{id_kelas}', [\App\Http\Controllers\InputNilaiController::class, 'show'])->name('show');
+        Route::get('/ajax/peserta/{id_kelas}', [\App\Http\Controllers\InputNilaiController::class, 'getPeserta'])->name('ajax.peserta');
+        Route::post('/ajax/cari-mahasiswa', [\App\Http\Controllers\InputNilaiController::class, 'cariMahasiswa'])->name('ajax.cari-mahasiswa');
+        Route::post('/ajax/store-peserta', [\App\Http\Controllers\InputNilaiController::class, 'storePeserta'])->name('ajax.store-peserta');
+        Route::post('/ajax/destroy-peserta', [\App\Http\Controllers\InputNilaiController::class, 'destroyPeserta'])->name('ajax.destroy-peserta');
+        Route::post('/ajax/update-nilai', [\App\Http\Controllers\InputNilaiController::class, 'updateNilai'])->name('ajax.update-nilai');
+    });
+
     Route::get('/admin/reference', [\App\Http\Controllers\ReferenceController::class, 'index'])->name('reference.index');
     Route::post('/admin/reference/sync/{table}', [\App\Http\Controllers\ReferenceController::class, 'sync'])->name('reference.sync');
 

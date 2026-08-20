@@ -67,6 +67,13 @@
                 </li>
 
                 <li>
+                    <a href="{{ route('skala-nilai.index') }}">
+                        <i data-feather="award"></i>
+                        <span data-key="t-skala-nilai">Skala Nilai</span>
+                    </a>
+                </li>
+
+                <li>
                     <a href="{{ route('kurikulum.index') }}">
                         <i data-feather="grid"></i>
                         <span data-key="t-kurikulum">Kurikulum</span>
@@ -85,12 +92,26 @@
                     </ul>
                 </li>
 
+                <li>
+                    <a href="{{ route('input-nilai.index') }}">
+                        <i data-feather="edit-3"></i>
+                        <span data-key="t-input-nilai">Input Nilai & KRS</span>
+                    </a>
+                </li>
+
                 <li class="menu-title mt-2" data-key="t-feeder">Integrasi Feeder</li>
 
                 <li>
                     <a href="{{ route('feeder.test') }}">
                         <i data-feather="database"></i>
                         <span data-key="t-json-explorer">JSON Explorer</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('kamus-data.index') }}">
+                        <i data-feather="book-open"></i>
+                        <span data-key="t-kamus-data">Kamus Data</span>
                     </a>
                 </li>
 

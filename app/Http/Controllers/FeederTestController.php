@@ -43,17 +43,13 @@ class FeederTestController extends Controller
         }
 
         try {
-            // Kita gunakan proxy agar otomatis menghandle token dari cache/login ulang
-            // Karena proxy kita menerima parameter terpisah, kita bongkar payloadnya
-            $act = $payload['act'];
-            $filter = $payload['filter'] ?? '';
-            $offset = $payload['offset'] ?? 0;
-            $limit = $payload['limit'] ?? 0;
-            $order = $payload['order'] ?? '';
+            // Tambahkan token secara otomatis ke dalam payload
+            $payload['token'] = $feeder->getToken();
 
-            $result = $feeder->proxy($act, $filter, $offset, $limit, $order);
+            // Gunakan Http facade agar semua parameter bebas (key, record, dll) bisa terkirim
+            $response = \Illuminate\Support\Facades\Http::post(config('feeder.url'), $payload);
 
-            return response()->json($result);
+            return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json([
                 'error_code' => 500,

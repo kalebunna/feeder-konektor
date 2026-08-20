@@ -22,6 +22,12 @@
                                 onclick="fillJson('GetDictionary')">Kamus Feeder</button>
                             <button type="button" class="btn btn-sm btn-outline-info"
                                 onclick="fillJson('GetListMahasiswa')">Daftar Mahasiswa (Limit 5)</button>
+                            <button type="button" class="btn btn-sm btn-outline-info"
+                                onclick="fillJson('InsertPesertaKelasKuliah')">Insert Peserta (KRS)</button>
+                            <button type="button" class="btn btn-sm btn-outline-info"
+                                onclick="fillJson('GetDetailNilaiPerkuliahanKelas')">Detail Nilai Kelas</button>
+                            <button type="button" class="btn btn-sm btn-outline-info"
+                                onclick="fillJson('UpdateNilaiPerkuliahanKelas')">Update Nilai Perkuliahan</button>
                         </div>
                     </div>
 
@@ -66,6 +72,15 @@
                     break;
                 case 'GetListMahasiswa':
                     payload = '{\n    "act": "GetListMahasiswa",\n    "limit": 5\n}';
+                    break;
+                case 'InsertPesertaKelasKuliah':
+                    payload = '{\n    "act": "InsertPesertaKelasKuliah",\n    "record": {\n        "id_kelas_kuliah": "...",\n        "id_registrasi_mahasiswa": "..."\n    }\n}';
+                    break;
+                case 'GetDetailNilaiPerkuliahanKelas':
+                    payload = '{\n    "act": "GetDetailNilaiPerkuliahanKelas",\n    "filter": "id_kelas_kuliah=\'...\'",\n    "limit": 10\n}';
+                    break;
+                case 'UpdateNilaiPerkuliahanKelas':
+                    payload = '{\n    "act": "UpdateNilaiPerkuliahanKelas",\n    "key": {\n        "id_kelas_kuliah": "...",\n        "id_registrasi_mahasiswa": "..."\n    },\n    "record": {\n        "nilai_angka": 80.0,\n        "nilai_huruf": "A",\n        "nilai_indeks": 4.0\n    }\n}';
                     break;
             }
             $('#jsonPayload').val(payload);

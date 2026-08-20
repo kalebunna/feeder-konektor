@@ -79,7 +79,17 @@ class KelasKuliahController extends Controller
         $prodis = Prodi::orderBy('nama_program_studi')->get();
         $semesters = Semester::where('a_periode_aktif', '1')->orderBy('id_semester', 'desc')->get();
 
-        return view('admin.kelas-kuliah.create', compact('prodis', 'semesters'));
+        $periodeLampau = [];
+        try {
+            $response = $this->feeder->proxy('GetPeriodeLampau');
+            if (isset($response['error_code']) && $response['error_code'] == 0) {
+                $periodeLampau = $response['data'] ?? [];
+            }
+        } catch (\Exception $e) {
+            // Log or ignore to avoid breaking the page
+        }
+
+        return view('admin.kelas-kuliah.create', compact('prodis', 'semesters', 'periodeLampau'));
     }
 
     public function store(Request $request)

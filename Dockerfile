@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -28,8 +28,10 @@ WORKDIR /var/www/html
 # Copy existing application directory contents
 COPY . /var/www/html
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
+# Create .composer directory and set permissions
+RUN mkdir -p /var/www/.composer \
+    && chown -R www-data:www-data /var/www/.composer \
+    && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 

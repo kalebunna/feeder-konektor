@@ -170,16 +170,16 @@
                             </h2>
                             <div id="collapseBiodata" class="accordion-collapse collapse show" data-bs-parent="#accordionApiDocs">
                                 <div class="accordion-body">
-                                    <h6>Parameter Query (Opsional):</h6>
+                                    <div class="alert alert-info py-2">
+                                        <strong>Wajib:</strong> Endpoint ini mewajibkan 2 parameter: <code>id_prodi</code> (UUID Prodi Feeder) dan <code>id_periode</code> (ID Periode Masuk, misal <code>20231</code>).
+                                    </div>
+                                    <h6>Parameter Query (Wajib):</h6>
                                     <ul>
-                                        <li><code>nim</code> : Filter berdasarkan NIM (contoh: <code>?nim=230149021</code>)</li>
-                                        <li><code>id_prodi</code> : Filter berdasarkan UUID Prodi Feeder</li>
-                                        <li><code>angkatan</code> : Filter tahun angkatan (contoh: <code>?angkatan=2023</code>)</li>
-                                        <li><code>q</code> : Pencarian nama / NIM / NIK</li>
-                                        <li><code>limit</code> : Jumlah per halaman (default 20, maks 100)</li>
+                                        <li><code>id_prodi</code> <span class="badge bg-danger">Wajib</span> : UUID Program Studi dari Neo Feeder</li>
+                                        <li><code>id_periode</code> <span class="badge bg-danger">Wajib</span> : ID Periode Masuk Neo Feeder (contoh: <code>20231</code> atau <code>20241</code>)</li>
                                     </ul>
                                     <h6>Contoh cURL:</h6>
-                                    <pre class="bg-dark text-white p-3 rounded"><code>curl -X GET "{{ url('/api/v1/biodata-mahasiswa') }}?nim=230149021" \
+                                    <pre class="bg-dark text-white p-3 rounded"><code>curl -X GET "{{ url('/api/v1/biodata-mahasiswa') }}?id_prodi=69a210b6-22a3-4b86-b12d-96d6008b664b&id_periode=20231" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Accept: application/json"</code></pre>
                                 </div>

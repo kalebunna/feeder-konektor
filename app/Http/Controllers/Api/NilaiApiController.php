@@ -17,26 +17,28 @@ class NilaiApiController extends Controller
     }
 
     /**
-     * Get list of Nilai Perkuliahan Mahasiswa per Prodi & Semester.
+     * Get list of Nilai Perkuliahan Mahasiswa per Prodi, Semester, dan Angkatan.
      * Wajib menyertakan parameter:
      * - id_prodi (UUID Program Studi dari Neo Feeder)
      * - id_semester (ID Semester Neo Feeder, contoh: 20241 untuk Ganjil, 20242 untuk Genap)
+     * - angkatan (Tahun Angkatan Mahasiswa, contoh: 2023 atau 2024)
      */
     public function index(Request $request): JsonResponse
     {
         $idProdi = $request->input('id_prodi');
         $idSemester = $request->input('id_semester');
+        $angkatan = $request->input('angkatan');
 
-        // Validasi: Kedua parameter wajib ada
-        if (empty($idProdi) || empty($idSemester)) {
+        // Validasi: Ketiga parameter wajib ada
+        if (empty($idProdi) || empty($idSemester) || empty($angkatan)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Parameter tidak valid. Parameter "id_prodi" dan "id_semester" wajib diisi.'
+                'message' => 'Parameter tidak valid. Parameter "id_prodi", "id_semester", dan "angkatan" wajib diisi.'
             ], 422);
         }
 
         try {
-            $filter = "id_prodi = '{$idProdi}' AND id_semester = '{$idSemester}'";
+            $filter = "id_prodi = '{$idProdi}' AND id_semester = '{$idSemester}' AND angkatan = '{$angkatan}'";
 
             // Ambil semua data nilai dari Neo Feeder tanpa batas limit (0 = all)
             $response = $this->feeder->proxy('GetDetailNilaiPerkuliahanKelas', $filter, 0, 0);
@@ -78,6 +80,7 @@ class NilaiApiController extends Controller
                 'status' => 'success',
                 'id_prodi' => $idProdi,
                 'id_semester' => $idSemester,
+                'angkatan' => $angkatan,
                 'total' => $formattedNilai->count(),
                 'data' => $formattedNilai
             ]);

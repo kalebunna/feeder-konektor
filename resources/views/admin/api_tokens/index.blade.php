@@ -232,21 +232,22 @@
                             <h2 class="accordion-header" id="headingNilai">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNilai">
                                     <span class="badge bg-success me-2 font-size-12">GET</span>
-                                    <code>/api/v1/nilai-perkuliahan</code> &nbsp;&mdash;&nbsp; Tarik Data Nilai Mahasiswa per Prodi & Semester (Ganjil/Genap)
+                                    <code>/api/v1/nilai-perkuliahan</code> &nbsp;&mdash;&nbsp; Tarik Nilai Mahasiswa per Prodi, Semester & Angkatan
                                 </button>
                             </h2>
                             <div id="collapseNilai" class="accordion-collapse collapse" data-bs-parent="#accordionApiDocs">
                                 <div class="accordion-body">
                                     <div class="alert alert-info py-2">
-                                        <strong>Wajib:</strong> Endpoint ini mewajibkan 2 parameter: <code>id_prodi</code> (UUID Prodi Feeder) dan <code>id_semester</code> (ID Semester, misal <code>20241</code> untuk Ganjil, <code>20242</code> untuk Genap).
+                                        <strong>Wajib:</strong> Endpoint ini mewajibkan 3 parameter: <code>id_prodi</code> (UUID Prodi Feeder), <code>id_semester</code> (ID Semester), dan <code>angkatan</code> (Tahun Angkatan).
                                     </div>
                                     <h6>Parameter Query (Wajib):</h6>
                                     <ul>
                                         <li><code>id_prodi</code> <span class="badge bg-danger">Wajib</span> : UUID Program Studi dari Neo Feeder</li>
                                         <li><code>id_semester</code> <span class="badge bg-danger">Wajib</span> : ID Semester Neo Feeder (contoh: <code>20241</code>)</li>
+                                        <li><code>angkatan</code> <span class="badge bg-danger">Wajib</span> : Tahun Angkatan Mahasiswa (contoh: <code>2023</code>)</li>
                                     </ul>
                                     <h6>Contoh cURL:</h6>
-                                    <pre class="bg-dark text-white p-3 rounded"><code>curl -X GET "{{ url('/api/v1/nilai-perkuliahan') }}?id_prodi=69a210b6-22a3-4b86-b12d-96d6008b664b&id_semester=20241" \
+                                    <pre class="bg-dark text-white p-3 rounded"><code>curl -X GET "{{ url('/api/v1/nilai-perkuliahan') }}?id_prodi=69a210b6-22a3-4b86-b12d-96d6008b664b&id_semester=20241&angkatan=2023" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -H "Accept: application/json"</code></pre>
                                 </div>

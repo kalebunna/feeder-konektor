@@ -16,6 +16,7 @@ class Mahasiswa extends Model
         'id_agama',
         'nama_agama',
         'id_periode',
+        'id_periode_masuk',
         'nama_periode_masuk',
         'tanggal_lahir',
         'jenis_kelamin',
@@ -30,6 +31,16 @@ class Mahasiswa extends Model
         'status_sync'
     ];
 
+    public function setIdPeriodeMasukAttribute($value)
+    {
+        $this->attributes['id_periode'] = $value;
+    }
+
+    public function getIdPeriodeMasukAttribute()
+    {
+        return $this->attributes['id_periode'] ?? null;
+    }
+
     public function biodata()
     {
         return $this->belongsTo(BiodataMahasiswa::class, 'id_mahasiswa', 'id_mahasiswa');
@@ -37,7 +48,7 @@ class Mahasiswa extends Model
 
     public function prodi()
     {
-        return $this->belongsTo(Prodi::class, 'id_prodi', 'id');
+        return $this->belongsTo(Prodi::class, 'id_prodi', 'id_prodi');
     }
 
     public function agama()
@@ -45,8 +56,25 @@ class Mahasiswa extends Model
         return $this->belongsTo(Agama::class, 'id_agama', 'id_agama');
     }
 
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class, 'id_periode', 'id_semester');
+    }
+
     public function periode()
     {
-        return $this->belongsTo(TahunAjaran::class, 'id_periode', 'id_tahun_ajaran');
+        return $this->belongsTo(Semester::class, 'id_periode', 'id_semester');
+    }
+
+    public function tahunAjaran()
+    {
+        return $this->hasOneThrough(
+            TahunAjaran::class,
+            Semester::class,
+            'id_semester',      // Foreign key on semesters table
+            'id_tahun_ajaran',  // Foreign key on tahun_ajarans table
+            'id_periode',       // Local key on mahasiswas table
+            'id_tahun_ajaran'   // Local key on semesters table
+        );
     }
 }

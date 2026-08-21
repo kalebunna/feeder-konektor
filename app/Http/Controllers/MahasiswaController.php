@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Mahasiswa;
 use App\Models\Prodi;
 use App\Models\TahunAjaran;
+use App\Models\Semester;
 use App\Services\FeederService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -24,7 +25,7 @@ class MahasiswaController extends Controller
     {
         app()->setLocale('id');
         if ($request->ajax()) {
-            $data = Mahasiswa::query();
+            $data = Mahasiswa::query()->with(['semester', 'prodi']);
 
             // Filter by Program Studi (Multiple Select2)
             if ($request->has('prodi_names') && !empty($request->prodi_names)) {
@@ -63,14 +64,16 @@ class MahasiswaController extends Controller
         $periodes = TahunAjaran::orderBy('id_tahun_ajaran', 'desc')->get(['id_tahun_ajaran', 'nama_tahun_ajaran']);
         $statuses = Mahasiswa::distinct()->whereNotNull('nama_status_mahasiswa')->orderBy('nama_status_mahasiswa')->get(['nama_status_mahasiswa']);
         $prodiList = Prodi::orderBy('nama_program_studi')->get();
+        $tahunAjaranList = TahunAjaran::orderBy('id_tahun_ajaran', 'desc')->get();
 
-        return view('admin.mahasiswa.index', compact('prodis', 'periodes', 'statuses', 'prodiList'));
+        return view('admin.mahasiswa.index', compact('prodis', 'periodes', 'statuses', 'prodiList', 'tahunAjaranList'));
     }
 
     public function sync(Request $request)
     {
         try {
             $id_prodi = $request->id_prodi;
+            $id_tahun_ajaran = $request->id_tahun_ajaran;
             $prodisToSync = [];
 
             if ($id_prodi && $id_prodi !== 'all') {
@@ -79,11 +82,27 @@ class MahasiswaController extends Controller
                 $prodisToSync = Prodi::pluck('id_prodi')->toArray();
             }
 
+            // Build Periode/Angkatan filter
+            $periodeFilter = '';
+            if (!empty($id_tahun_ajaran) && $id_tahun_ajaran !== 'all') {
+                $semesters = Semester::where('id_tahun_ajaran', $id_tahun_ajaran)->pluck('id_semester')->toArray();
+                if (!empty($semesters)) {
+                    $periodeFilter = "id_periode_masuk IN ('" . implode("','", $semesters) . "')";
+                } else {
+                    $periodeFilter = "id_periode_masuk LIKE '{$id_tahun_ajaran}%'";
+                }
+            }
+
             $totalFeeder = 0;
             $totalSaved = 0;
 
             foreach ($prodisToSync as $prodiId) {
-                $response = $this->feeder->proxy('GetDataLengkapMahasiswaProdi', "id_prodi='{$prodiId}'");
+                $filter = "id_prodi='{$prodiId}'";
+                if (!empty($periodeFilter)) {
+                    $filter .= " AND " . $periodeFilter;
+                }
+
+                $response = $this->feeder->proxy('GetDataLengkapMahasiswaProdi', $filter);
                 // dd(response()->json($response));
                 if (isset($response['error_code']) && $response['error_code'] != 0) {
                     return response()->json(['success' => false, 'message' => $response['error_desc']]);
@@ -119,6 +138,11 @@ class MahasiswaController extends Controller
                         if (isset($item[$field])) {
                             $item[$field] = str_replace(' ', '', (string)$item[$field]);
                         }
+                    }
+
+                    // Map id_periode_masuk to id_periode if id_periode is not present
+                    if (!empty($item['id_periode_masuk']) && empty($item['id_periode'])) {
+                        $item['id_periode'] = $item['id_periode_masuk'];
                     }
 
                     // Define unique keys for updateOrCreate

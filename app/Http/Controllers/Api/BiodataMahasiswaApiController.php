@@ -18,19 +18,21 @@ class BiodataMahasiswaApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         $idProdi = $request->input('id_prodi');
-        $idPeriode = $request->input('id_periode');
+        $idPeriode = $request->input('id_periode') ?? $request->input('id_periode_masuk');
 
         // Validasi: Kedua parameter wajib ada
         if (empty($idProdi) || empty($idPeriode)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Parameter tidak valid. Parameter "id_prodi" dan "id_periode" wajib diisi.'
+                'message' => 'Parameter tidak valid. Parameter "id_prodi" dan "id_periode" (atau "id_periode_masuk") wajib diisi.'
             ], 422);
         }
 
         $mahasiswaList = Mahasiswa::with('biodata')
             ->where('id_prodi', $idProdi)
-            ->where('id_periode', $idPeriode)
+            ->where(function ($q) use ($idPeriode) {
+                $q->where('id_periode', $idPeriode);
+            })
             ->orderBy('nim', 'asc')
             ->get();
 

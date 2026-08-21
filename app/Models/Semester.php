@@ -30,4 +30,9 @@ class Semester extends Model
     {
         return $this->belongsTo(TahunAjaran::class, 'id_tahun_ajaran', 'id_tahun_ajaran');
     }
+
+    public function mahasiswas()
+    {
+        return $this->hasMany(Mahasiswa::class, 'id_periode', 'id_semester');
+    }
 }

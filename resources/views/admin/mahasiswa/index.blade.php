@@ -223,47 +223,62 @@
             });
 
              $('#btn-sync').on('click', function() {
-                let prodiOptions = {
-                    'all': 'Semua Program Studi'
-                };
+                let prodiHtml = '<option value="all">Semua Program Studi</option>';
                 @foreach($prodiList as $p)
-                    prodiOptions["{{ $p->id_prodi }}"] = "{{ $p->nama_program_studi }} ({{ $p->nama_jenjang_pendidikan }})";
+                    prodiHtml += `<option value="{{ $p->id_prodi }}">{{ $p->nama_program_studi }} ({{ $p->nama_jenjang_pendidikan }})</option>`;
+                @endforeach
+
+                let tahunAjaranHtml = '<option value="all">Semua Tahun Ajaran / Angkatan</option>';
+                @foreach($tahunAjaranList as $t)
+                    tahunAjaranHtml += `<option value="{{ $t->id_tahun_ajaran }}">{{ $t->nama_tahun_ajaran }}</option>`;
                 @endforeach
 
                 Swal.fire({
-                    title: 'Sinkronisasi Data',
-                    text: 'Pilih Program Studi yang ingin disinkronkan dengan NeoFeeder:',
-                    input: 'select',
-                    inputOptions: prodiOptions,
-                    inputValue: 'all',
+                    title: 'Sinkronisasi Data Mahasiswa',
+                    html: `
+                        <div class="text-start mt-2">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Program Studi:</label>
+                                <select id="swal-prodi" class="form-select form-control">
+                                    ${prodiHtml}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tahun Ajaran / Angkatan:</label>
+                                <select id="swal-tahun-ajaran" class="form-select form-control">
+                                    ${tahunAjaranHtml}
+                                </select>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="fas fa-info-circle me-1"></i>Memilih tahun ajaran otomatis menyaring semester Ganjil, Genap & Pendek pada angkatan tersebut agar proses sinkronisasi cepat dan ringan.
+                                </small>
+                            </div>
+                        </div>
+                    `,
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, Sinkronkan!',
+                    confirmButtonText: '<i class="fas fa-sync-alt me-1"></i> Ya, Sinkronkan!',
                     cancelButtonText: 'Batal',
                     confirmButtonColor: '#5156be',
                     cancelButtonColor: '#fd625e',
                     showLoaderOnConfirm: true,
-                    inputValidator: (value) => {
-                        if (!value) {
-                            return 'Anda harus memilih Program Studi!'
-                        }
-                    },
-                    preConfirm: (prodiId) => {
+                    preConfirm: () => {
+                        const prodiId = $('#swal-prodi').val();
+                        const tahunAjaranId = $('#swal-tahun-ajaran').val();
+
                         return $.ajax({
                             url: "{{ route('mahasiswa.sync') }}",
                             type: "POST",
                             data: {
                                 _token: "{{ csrf_token() }}",
-                                id_prodi: prodiId
+                                id_prodi: prodiId,
+                                id_tahun_ajaran: tahunAjaranId
                             }
                         }).then(response => {
                             if (!response.success) {
-                                throw new Error(response.message ||
-                                    'Gagal menyinkronkan data');
+                                throw new Error(response.message || 'Gagal menyinkronkan data');
                             }
                             return response;
                         }).catch(error => {
-                            Swal.showValidationMessage(
-                                `Request failed: ${error.message}`);
+                            Swal.showValidationMessage(`Request failed: ${error.message}`);
                         });
                     },
                     allowOutsideClick: () => !Swal.isLoading()

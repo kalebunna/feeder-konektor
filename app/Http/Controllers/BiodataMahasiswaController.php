@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BiodataMahasiswa;
 use App\Models\Mahasiswa;
 use App\Models\TahunAjaran;
+use App\Models\Semester;
 use App\Models\Prodi;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -62,8 +63,9 @@ class BiodataMahasiswaController extends Controller
         $prodis = Mahasiswa::distinct()->whereNotNull('nama_program_studi')->orderBy('nama_program_studi')->get(['nama_program_studi']);
         $periodes = Mahasiswa::distinct()->whereNotNull('nama_periode_masuk')->orderBy('nama_periode_masuk', 'desc')->get(['nama_periode_masuk']);
         $prodiList = Prodi::orderBy('nama_program_studi')->get();
+        $tahunAjaranList = TahunAjaran::orderBy('id_tahun_ajaran', 'desc')->get();
 
-        return view('admin.biodata_mahasiswa.index', compact('prodis', 'periodes', 'prodiList'));
+        return view('admin.biodata_mahasiswa.index', compact('prodis', 'periodes', 'prodiList', 'tahunAjaranList'));
     }
 
     public function export(Request $request)
@@ -301,6 +303,7 @@ class BiodataMahasiswaController extends Controller
             }
 
             $id_prodi = $request->id_prodi;
+            $id_tahun_ajaran = $request->id_tahun_ajaran;
             $prodisToSync = [];
 
             if ($id_prodi && $id_prodi !== 'all') {
@@ -309,11 +312,27 @@ class BiodataMahasiswaController extends Controller
                 $prodisToSync = Prodi::pluck('id_prodi')->toArray();
             }
 
+            // Build Periode/Angkatan filter
+            $periodeFilter = '';
+            if (!empty($id_tahun_ajaran) && $id_tahun_ajaran !== 'all') {
+                $semesters = Semester::where('id_tahun_ajaran', $id_tahun_ajaran)->pluck('id_semester')->toArray();
+                if (!empty($semesters)) {
+                    $periodeFilter = "id_periode_masuk IN ('" . implode("','", $semesters) . "')";
+                } else {
+                    $periodeFilter = "id_periode_masuk LIKE '{$id_tahun_ajaran}%'";
+                }
+            }
+
             $totalFeeder = 0;
             $totalSaved = 0;
 
             foreach ($prodisToSync as $prodiId) {
-                $response = $this->feeder->proxy('GetDataLengkapMahasiswaProdi', "id_prodi='{$prodiId}'");
+                $filter = "id_prodi='{$prodiId}'";
+                if (!empty($periodeFilter)) {
+                    $filter .= " AND " . $periodeFilter;
+                }
+
+                $response = $this->feeder->proxy('GetDataLengkapMahasiswaProdi', $filter);
 
                 if (isset($response['error_code']) && $response['error_code'] != 0) {
                     return response()->json(['success' => false, 'message' => $response['error_desc']]);
@@ -357,11 +376,20 @@ class BiodataMahasiswaController extends Controller
                         $item + ['status_sync' => 'sudah sync']
                     );
 
-                    // Update id_prodi di tabel mahasiswas jika sebelumnya NULL / belum ada
+                    // Update id_prodi & id_periode di tabel mahasiswas jika sebelumnya NULL / belum ada
+                    $updateMhs = [];
                     if (!empty($item['id_prodi'])) {
-                        Mahasiswa::where('id_mahasiswa', $item['id_mahasiswa'])
-                            ->whereNull('id_prodi')
-                            ->update(['id_prodi' => $item['id_prodi']]);
+                        $updateMhs['id_prodi'] = $item['id_prodi'];
+                    }
+                    $periode = $item['id_periode'] ?? $item['id_periode_masuk'] ?? null;
+                    if (!empty($periode)) {
+                        $updateMhs['id_periode'] = $periode;
+                    }
+                    if (!empty($item['nama_periode_masuk'])) {
+                        $updateMhs['nama_periode_masuk'] = $item['nama_periode_masuk'];
+                    }
+                    if (!empty($updateMhs)) {
+                        Mahasiswa::where('id_mahasiswa', $item['id_mahasiswa'])->update($updateMhs);
                     }
 
                     $totalSaved++;

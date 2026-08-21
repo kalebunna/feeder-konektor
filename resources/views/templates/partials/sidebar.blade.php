@@ -128,6 +128,15 @@
                         <span data-key="t-import-mahasiswa">Import Mahasiswa</span>
                     </a>
                 </li>
+
+                <li class="menu-title mt-2" data-key="t-developer">API & Developer</li>
+
+                <li>
+                    <a href="{{ route('api-tokens.index') }}">
+                        <i data-feather="key"></i>
+                        <span data-key="t-api-tokens">API Tokens (Sanctum)</span>
+                    </a>
+                </li>
             </ul>
 
             <div class="card sidebar-alert border-0 text-center mx-4 mb-0 mt-5">

@@ -17,6 +17,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/kamus-data/fetch', [\App\Http\Controllers\KamusDataController::class, 'fetch'])->name('kamus-data.fetch');
 
     Route::get('/admin/skala-nilai', [\App\Http\Controllers\SkalaNilaiController::class, 'index'])->name('skala-nilai.index');
+    
+    Route::prefix('admin/api-tokens')->name('api-tokens.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ApiTokenController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\ApiTokenController::class, 'store'])->name('store');
+        Route::delete('/{id}', [\App\Http\Controllers\ApiTokenController::class, 'destroy'])->name('destroy');
+    });
 
     Route::prefix('admin/input-nilai')->name('input-nilai.')->group(function () {
         Route::get('/', [\App\Http\Controllers\InputNilaiController::class, 'index'])->name('index');

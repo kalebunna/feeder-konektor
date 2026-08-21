@@ -22,26 +22,4 @@ class JurusanApiController extends Controller
             'data' => $data
         ]);
     }
-
-    /**
-     * Get single Program Studi by ID (UUID / id_prodi).
-     */
-    public function show(string $id): JsonResponse
-    {
-        $prodi = Prodi::where('id', $id)
-            ->orWhere('id_prodi', $id)
-            ->first();
-
-        if (!$prodi) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Program Studi / Jurusan tidak ditemukan.'
-            ], 404);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $prodi
-        ]);
-    }
 }

@@ -22,24 +22,4 @@ class SemesterApiController extends Controller
             'data' => $data
         ]);
     }
-
-    /**
-     * Get single semester by id_semester.
-     */
-    public function show(string $id): JsonResponse
-    {
-        $semester = Semester::where('id_semester', $id)->first();
-
-        if (!$semester) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Semester tidak ditemukan.'
-            ], 404);
-        }
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $semester
-        ]);
-    }
 }

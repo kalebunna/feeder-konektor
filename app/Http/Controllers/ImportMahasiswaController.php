@@ -32,7 +32,14 @@ class ImportMahasiswaController extends Controller
     public function index()
     {
         $data = MahasiswaBaruExcel::latest()->paginate(20);
-        return view('admin.import.mahasiswa', compact('data'));
+        $tahunMasukList = MahasiswaBaruExcel::select('tahun_masuk')
+            ->whereNotNull('tahun_masuk')
+            ->where('tahun_masuk', '!=', '')
+            ->distinct()
+            ->orderBy('tahun_masuk', 'desc')
+            ->pluck('tahun_masuk');
+            
+        return view('admin.import.mahasiswa', compact('data', 'tahunMasukList'));
     }
 
     public function import(Request $request)
@@ -369,5 +376,23 @@ class ImportMahasiswaController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
+    }
+    public function destroy($id)
+    {
+        $mhs = MahasiswaBaruExcel::findOrFail($id);
+        $mhs->delete();
+
+        return back()->with('success', 'Data impor berhasil dihapus.');
+    }
+
+    public function clearAll(Request $request)
+    {
+        $request->validate([
+            'tahun_masuk' => 'required'
+        ]);
+
+        $deleted = MahasiswaBaruExcel::where('tahun_masuk', $request->tahun_masuk)->delete();
+        
+        return back()->with('success', "Berhasil membersihkan $deleted data impor untuk Tahun Masuk {$request->tahun_masuk}.");
     }
 }

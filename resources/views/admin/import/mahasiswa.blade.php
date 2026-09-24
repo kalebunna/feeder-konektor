@@ -55,8 +55,13 @@
 
         <div class="col-md-12 mt-4">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Data Terakhir Diimpor</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Data Terakhir Diimpor</h4>
+                    @if($data->count() > 0)
+                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#clearModal">
+                            <i class="fas fa-trash-alt me-1"></i> Bersihkan Data
+                        </button>
+                    @endif
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -90,10 +95,19 @@
                                         <td>{{ $item->created_at->format('d/m/Y H:i') }}</td>
                                         <td>
                                             @if ($item->status == 'belum sync')
-                                                <a href="{{ route('import-mahasiswa.sync-form', $item->id) }}"
-                                                    class="btn btn-sm btn-info">
-                                                    <i class="fas fa-sync me-1"></i> Sinkronkan
-                                                </a>
+                                                <div class="d-flex gap-1">
+                                                    <a href="{{ route('import-mahasiswa.sync-form', $item->id) }}"
+                                                        class="btn btn-sm btn-info">
+                                                        <i class="fas fa-sync me-1"></i> Sinkronkan
+                                                    </a>
+                                                    <form action="{{ route('import-mahasiswa.destroy', $item->id) }}" method="POST" class="d-inline form-delete">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="button" class="btn btn-sm btn-danger btn-delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             @else
                                                 <div class="d-flex gap-1">
                                                     <button class="btn btn-sm btn-secondary" disabled>
@@ -103,6 +117,13 @@
                                                         class="btn btn-sm btn-info" title="Lihat Detail">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
+                                                    <form action="{{ route('import-mahasiswa.destroy', $item->id) }}" method="POST" class="d-inline form-delete">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="button" class="btn btn-sm btn-danger btn-delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             @endif
                                         </td>
@@ -122,4 +143,63 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Clear By Tahun Masuk -->
+    <div class="modal fade" id="clearModal" tabindex="-1" aria-labelledby="clearModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('import-mahasiswa.clear-all') }}" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="clearModalLabel">Bersihkan Data Impor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            Pilih <strong>Tahun Masuk</strong> yang datanya ingin dihapus secara permanen dari aplikasi ini. Data yang sudah disinkronkan ke Feeder <strong>tidak</strong> akan terhapus di Feeder.
+                        </div>
+                        <div class="mb-3">
+                            <label for="tahun_masuk" class="form-label">Tahun Masuk</label>
+                            <select name="tahun_masuk" id="tahun_masuk" class="form-control" required>
+                                <option value="">-- Pilih Tahun Masuk --</option>
+                                @foreach($tahunMasukList as $tahun)
+                                    <option value="{{ $tahun }}">{{ $tahun }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Hapus Data</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
+
+@push('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+        $('.btn-delete').on('click', function() {
+            let form = $(this).closest('form');
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data impor ini akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>
+@endpush

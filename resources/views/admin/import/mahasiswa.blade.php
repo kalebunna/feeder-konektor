@@ -42,10 +42,13 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-12 d-flex gap-2">
                                 <button type="submit" class="btn btn-primary w-md">
                                     <i class="fas fa-upload me-1"></i> Impor Data
                                 </button>
+                                <a href="{{ route('import-mahasiswa.template') }}" class="btn btn-outline-success">
+                                    <i class="fas fa-file-excel me-1"></i> Unduh Template CSV
+                                </a>
                             </div>
                         </div>
                     </form>

@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/semester/sync-active', [\App\Http\Controllers\SemesterController::class, 'syncActiveStatus'])->name('semester.sync-active');
 
     Route::get('/admin/import-mahasiswa', [\App\Http\Controllers\ImportMahasiswaController::class, 'index'])->name('import-mahasiswa.index');
+    Route::get('/admin/import-mahasiswa/template', [\App\Http\Controllers\ImportMahasiswaController::class, 'downloadTemplate'])->name('import-mahasiswa.template');
     Route::post('/admin/import-mahasiswa', [\App\Http\Controllers\ImportMahasiswaController::class, 'import'])->name('import-mahasiswa.import');
     Route::delete('/admin/import-mahasiswa/clear', [\App\Http\Controllers\ImportMahasiswaController::class, 'clearAll'])->name('import-mahasiswa.clear-all');
     Route::delete('/admin/import-mahasiswa/{id}', [\App\Http\Controllers\ImportMahasiswaController::class, 'destroy'])->name('import-mahasiswa.destroy');

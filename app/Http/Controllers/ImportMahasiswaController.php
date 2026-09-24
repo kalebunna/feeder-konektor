@@ -42,6 +42,26 @@ class ImportMahasiswaController extends Controller
         return view('admin.import.mahasiswa', compact('data', 'tahunMasukList'));
     }
 
+    public function downloadTemplate()
+    {
+        $headers = [
+            'No', 'Nama', 'NIM', 'Tempat Tanggal Lahir', 'NIK', 'Program Studi', 'Tahun Masuk', 'Agama', 'Jenis Kelamin', 'Nomor HP', 'RT/RW', 'Dusun', 'Desa/Kelurahan', 'Kecamatan', 'Kabupaten',
+            'Nama Ayah', 'TTL Ayah', 'NIK Ayah', 'Pendidikan Ayah', 'RT/RW Ayah', 'Dusun Ayah', 'Desa/Kelurahan Ayah', 'Kecamatan Ayah', 'Kabupaten Ayah', 'Pekerjaan Ayah',
+            'Nama Ibu', 'TTL Ibu', 'NIK Ibu', 'Pendidikan Ibu', 'RT/RW Ibu', 'Dusun Ibu', 'Desa/Kelurahan Ibu', 'Kecamatan Ibu', 'Kabupaten Ibu', 'Nomor HP Ibu',
+            'Nama Wali', 'Alamat Wali', 'Nomor HP Wali', 'Asal Sekolah', 'Alamat Sekolah', 'Tahun Lulus', 'NISN'
+        ];
+
+        $callback = function() use ($headers) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers, ';');
+            fclose($file);
+        };
+
+        return response()->streamDownload($callback, 'Template_Import_Mahasiswa.csv', [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
     public function import(Request $request)
     {
         $request->validate([

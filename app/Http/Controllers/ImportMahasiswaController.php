@@ -47,7 +47,7 @@ class ImportMahasiswaController extends Controller
         $headers = [
             'No', 'Nama', 'NIM', 'Tempat Lahir', 'Tanggal Lahir', 'NIK', 'Program Studi', 'Tahun Masuk', 'Agama', 'Jenis Kelamin', 'Nomor HP', 'RT', 'RW', 'Dusun', 'Desa/Kelurahan', 'Kecamatan', 'Kabupaten',
             'Nama Ayah', 'Tempat Lahir Ayah', 'Tanggal Lahir Ayah', 'NIK Ayah', 'Pendidikan Ayah', 'RT Ayah', 'RW Ayah', 'Dusun Ayah', 'Desa/Kelurahan Ayah', 'Kecamatan Ayah', 'Kabupaten Ayah', 'Pekerjaan Ayah',
-            'Nama Ibu', 'Tempat Lahir Ibu', 'Tanggal Lahir Ibu', 'NIK Ibu', 'Pendidikan Ibu', 'RT Ibu', 'RW Ibu', 'Dusun Ibu', 'Desa/Kelurahan Ibu', 'Kecamatan Ibu', 'Kabupaten Ibu', 'Nomor HP Ibu',
+            'Nama Ibu', 'Tempat Lahir Ibu', 'Tanggal Lahir Ibu', 'NIK Ibu', 'Pendidikan Ibu', 'RT Ibu', 'RW Ibu', 'Dusun Ibu', 'Desa/Kelurahan Ibu', 'Kecamatan Ibu', 'Kabupaten Ibu', 'Pekerjaan Ibu', 'Nomor HP Ibu',
             'Nama Wali', 'Alamat Wali', 'Nomor HP Wali', 'Asal Sekolah', 'Alamat Sekolah', 'Tahun Lulus', 'NISN'
         ];
 
@@ -77,12 +77,20 @@ class ImportMahasiswaController extends Controller
         $count = 0;
         DB::beginTransaction();
         try {
-            // Helper to parse birthdate (e.g. 06/06/81)
+            // Helper to parse birthdate (e.g. 06/06/81, 25/05/2008, 25-05-2008)
             $parseDate = function ($dateStr) {
                 if (empty($dateStr) || strlen($dateStr) < 5) return null;
+                
+                // Replace - and / with space
+                $dateStr = str_replace(['-', '/'], ' ', trim($dateStr));
+                $dateStr = preg_replace('/\s+/', ' ', $dateStr);
+
                 try {
-                    // Assuming DMY
-                    return Carbon::createFromFormat('d/m/y', $dateStr)->format('Y-m-d');
+                    $parts = explode(' ', $dateStr);
+                    if (isset($parts[2]) && strlen($parts[2]) == 2) {
+                        return Carbon::createFromFormat('d m y', $dateStr)->format('Y-m-d');
+                    }
+                    return Carbon::createFromFormat('d m Y', $dateStr)->format('Y-m-d');
                 } catch (\Exception $e) {
                     return null;
                 }
@@ -130,16 +138,17 @@ class ImportMahasiswaController extends Controller
                     'desa_kelurahan_ibu' => $row[37] ?? null,
                     'kecamatan_ibu' => $row[38] ?? null,
                     'kabupaten_ibu' => $row[39] ?? null,
-                    'nomor_hp_ibu' => $row[40] ?? null,
+                    'pekerjaan_ibu' => $row[40] ?? null,
+                    'nomor_hp_ibu' => $row[41] ?? null,
 
-                    'nama_wali' => $row[41] ?? null,
-                    'alamat_wali' => $row[42] ?? null,
-                    'nomor_hp_wali' => $row[43] ?? null,
+                    'nama_wali' => $row[42] ?? null,
+                    'alamat_wali' => $row[43] ?? null,
+                    'nomor_hp_wali' => $row[44] ?? null,
 
-                    'asal_sekolah' => $row[44] ?? null,
-                    'alamat_sekolah' => $row[45] ?? null,
-                    'tahun_lulus' => $row[46] ?? null,
-                    'nisn' => $row[47] ?? null,
+                    'asal_sekolah' => $row[45] ?? null,
+                    'alamat_sekolah' => $row[46] ?? null,
+                    'tahun_lulus' => $row[47] ?? null,
+                    'nisn' => $row[48] ?? null,
                     'status' => 'belum sync'
                 ]);
                 $count++;
@@ -260,8 +269,17 @@ class ImportMahasiswaController extends Controller
                 }
             }
 
+            // Standarisasi pemisah tanggal menjadi spasi
+            $dateStr = str_replace(['-', '/'], ' ', $dateStr);
+            $dateStr = preg_replace('/\s+/', ' ', trim($dateStr));
+
             try {
-                $tanggalLahir = Carbon::createFromFormat('d m Y', $dateStr)->format('Y-m-d');
+                $parts = explode(' ', $dateStr);
+                if (isset($parts[2]) && strlen($parts[2]) == 2) {
+                    $tanggalLahir = Carbon::createFromFormat('d m y', $dateStr)->format('Y-m-d');
+                } else {
+                    $tanggalLahir = Carbon::createFromFormat('d m Y', $dateStr)->format('Y-m-d');
+                }
             } catch (\Exception $e) {
                 $tanggalLahir = null;
             }

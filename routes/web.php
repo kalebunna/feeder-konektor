@@ -64,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/import-mahasiswa', [\App\Http\Controllers\ImportMahasiswaController::class, 'import'])->name('import-mahasiswa.import');
     Route::delete('/admin/import-mahasiswa/clear', [\App\Http\Controllers\ImportMahasiswaController::class, 'clearAll'])->name('import-mahasiswa.clear-all');
     Route::delete('/admin/import-mahasiswa/{id}', [\App\Http\Controllers\ImportMahasiswaController::class, 'destroy'])->name('import-mahasiswa.destroy');
+    Route::get('/admin/import-mahasiswa/ajax/search-wilayah', [\App\Http\Controllers\ImportMahasiswaController::class, 'searchWilayah'])->name('import-mahasiswa.search-wilayah');
     Route::get('/admin/import-mahasiswa/sync/{id}', [\App\Http\Controllers\ImportMahasiswaController::class, 'syncForm'])->name('import-mahasiswa.sync-form');
     Route::post('/admin/import-mahasiswa/sync/{id}', [\App\Http\Controllers\ImportMahasiswaController::class, 'syncProcess'])->name('import-mahasiswa.sync-process');
 

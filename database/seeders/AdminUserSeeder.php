@@ -16,6 +16,7 @@ class AdminUserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@stainas.ac.id'],
             [
+
                 'name' => 'Administrator',
                 'password' => Hash::make('password'),
             ]

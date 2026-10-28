@@ -56,9 +56,14 @@
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">NIK</label>
+                                <label class="form-label">NIK <span class="text-danger">*</span></label>
                                 <input type="text" name="nik" class="form-control" value="{{ $mhs->nik }}"
                                     required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">NISN</label>
+                                <input type="text" name="nisn" class="form-control" value="{{ $mhs->nisn }}"
+                                    placeholder="Nomor Induk Siswa Nasional">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Nomor Handphone</label>
@@ -81,16 +86,24 @@
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label class="form-label">Wilayah (Kecamatan)</label>
-                                <select name="id_wilayah" class="form-control select2" required>
-                                    <option value="">-- Pilih Wilayah --</option>
-                                    @if ($matchedWilayah)
-                                        <option value="{{ $matchedWilayah->id_wilayah }}" selected>
-                                            {{ $matchedWilayah->nama_wilayah }}</option>
+                                <label class="form-label">Wilayah (Kecamatan) <span class="text-danger">*</span></label>
+                                <select name="id_wilayah" id="select_wilayah" class="form-control" required>
+                                    @if ($selectedWilayah && !empty($matchedWilayahText))
+                                        <option value="{{ $selectedWilayah }}" selected>
+                                            {{ $matchedWilayahText }} ({{ $selectedWilayah }})
+                                        </option>
+                                    @else
+                                        <option value=""></option>
                                     @endif
                                 </select>
-                                <small class="text-muted">Gunakan pencarian untuk wilayah lain (Coming Soon with
-                                    AJAX)</small>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <small class="text-muted">Ketik min. 2 huruf untuk mencari wilayah.</small>
+                                    @if ($mhs->kecamatan || $mhs->kabupaten)
+                                        <small class="text-secondary">
+                                            Data Excel: <span class="badge bg-light text-dark border">{{ $mhs->kecamatan ?? '-' }}, {{ $mhs->kabupaten ?? '-' }}</span>
+                                        </small>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
@@ -364,8 +377,31 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            $('.select2').select2({
+            $('.select2').not('#select_wilayah').select2({
                 width: '100%'
+            });
+
+            $('#select_wilayah').select2({
+                width: '100%',
+                placeholder: '-- Cari Kecamatan / Kabupaten --',
+                allowClear: true,
+                ajax: {
+                    url: "{{ route('import-mahasiswa.search-wilayah') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 2
             });
 
             $('select[name="id_periode_masuk"]').on('change', function() {

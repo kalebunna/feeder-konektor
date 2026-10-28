@@ -164,6 +164,42 @@ class ImportMahasiswaController extends Controller
         }
     }
 
+    public function searchWilayah(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $results = DB::table('wilayah as kec')
+            ->leftJoin('wilayah as kab', 'kab.id_wilayah', '=', 'kec.id_induk_wilayah')
+            ->leftJoin('wilayah as prov', 'prov.id_wilayah', '=', 'kab.id_induk_wilayah')
+            ->where('kec.id_level_wilayah', 3)
+            ->where(function ($query) use ($q) {
+                $query->where('kec.nama_wilayah', 'ilike', "%{$q}%")
+                      ->orWhere('kab.nama_wilayah', 'ilike', "%{$q}%")
+                      ->orWhere('prov.nama_wilayah', 'ilike', "%{$q}%")
+                      ->orWhere('kec.id_wilayah', 'like', "{$q}%");
+            })
+            ->select(
+                DB::raw('TRIM(kec.id_wilayah) as id'),
+                'kec.nama_wilayah as kecamatan',
+                'kab.nama_wilayah as kabupaten',
+                'prov.nama_wilayah as provinsi'
+            )
+            ->limit(30)
+            ->get()
+            ->map(function ($item) {
+                $parts = array_filter([$item->kecamatan, $item->kabupaten, $item->provinsi]);
+                return [
+                    'id' => $item->id,
+                    'text' => implode(' - ', $parts) . " ({$item->id})"
+                ];
+            });
+
+        return response()->json($results);
+    }
+
     public function syncForm($id)
     {
         $mhs = MahasiswaBaruExcel::findOrFail($id);
@@ -185,14 +221,56 @@ class ImportMahasiswaController extends Controller
             $selectedAgama = $matchAgama ? $matchAgama->id_agama : null;
         }
 
-        // 2. Auto-match Wilayah (Kecamatan)
+        // 2. Auto-match Wilayah (Kecamatan) dengan hierarki Kabupaten & Kecamatan
         $selectedWilayah = null;
         $matchedWilayah = null;
-        if ($mhs->kecamatan) {
-            $matchedWilayah = Wilayah::where('nama_wilayah', 'like', '%' . $mhs->kecamatan . '%')
-                ->where('id_level_wilayah', 3) // Assuming 3 is Kecamatan
-                ->first();
-            $selectedWilayah = $matchedWilayah ? $matchedWilayah->id_wilayah : null;
+        $matchedWilayahText = '';
+
+        $cleanKab = trim(str_ireplace(['kabupaten', 'kab.', 'kab ', 'kota'], '', $mhs->kabupaten ?? ''));
+        $cleanKec = trim(str_ireplace(['kecamatan', 'kec.', 'kec '], '', $mhs->kecamatan ?? ''));
+
+        if ($cleanKec) {
+            $query = DB::table('wilayah as kec')
+                ->leftJoin('wilayah as kab', 'kab.id_wilayah', '=', 'kec.id_induk_wilayah')
+                ->leftJoin('wilayah as prov', 'prov.id_wilayah', '=', 'kab.id_induk_wilayah')
+                ->where('kec.id_level_wilayah', 3);
+
+            if ($cleanKab) {
+                $query->where('kab.nama_wilayah', 'ilike', '%' . $cleanKab . '%');
+            }
+            $query->where('kec.nama_wilayah', 'ilike', '%' . $cleanKec . '%');
+
+            $matched = $query->select(
+                DB::raw('TRIM(kec.id_wilayah) as id_wilayah'),
+                'kec.nama_wilayah as kecamatan',
+                'kab.nama_wilayah as kabupaten',
+                'prov.nama_wilayah as provinsi'
+            )->first();
+
+            // Fallback jika tidak cocok dengan kabupaten, cari berdasarkan kecamatan saja
+            if (!$matched) {
+                $matched = DB::table('wilayah as kec')
+                    ->leftJoin('wilayah as kab', 'kab.id_wilayah', '=', 'kec.id_induk_wilayah')
+                    ->leftJoin('wilayah as prov', 'prov.id_wilayah', '=', 'kab.id_induk_wilayah')
+                    ->where('kec.id_level_wilayah', 3)
+                    ->where('kec.nama_wilayah', 'ilike', '%' . $cleanKec . '%')
+                    ->select(
+                        DB::raw('TRIM(kec.id_wilayah) as id_wilayah'),
+                        'kec.nama_wilayah as kecamatan',
+                        'kab.nama_wilayah as kabupaten',
+                        'prov.nama_wilayah as provinsi'
+                    )->first();
+            }
+
+            if ($matched) {
+                $selectedWilayah = $matched->id_wilayah;
+                $matchedWilayahText = "{$matched->kecamatan} - {$matched->kabupaten} ({$matched->provinsi})";
+                $matchedWilayah = (object)[
+                    'id_wilayah' => $matched->id_wilayah,
+                    'nama_wilayah' => $matched->kecamatan,
+                    'full_text' => $matchedWilayahText
+                ];
+            }
         }
 
         // 3. Auto-match Negara (Default Indonesia)
@@ -312,6 +390,7 @@ class ImportMahasiswaController extends Controller
             'selectedAgama',
             'selectedWilayah',
             'matchedWilayah',
+            'matchedWilayahText',
             'selectedNegara',
             'selectedPekerjaanAyah',
             'selectedPekerjaanIbu',
@@ -335,7 +414,7 @@ class ImportMahasiswaController extends Controller
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'id_agama' => $request->id_agama ? (int)$request->id_agama : null,
                 'nik' => $request->nik,
-                'nisn' => $mhs->nisn,
+                'nisn' => $request->nisn ?? $mhs->nisn,
                 'npwp' => null,
                 'kewarganegaraan' => $request->kewarganegaraan,
                 'jalan' => null,
